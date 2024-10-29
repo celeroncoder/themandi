@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={`${GeistSans.variable}`}>
-        <body>
+        <body className="overflow-auto scroll-smooth">
           <TRPCReactProvider>{children}</TRPCReactProvider>
         </body>
       </html>
