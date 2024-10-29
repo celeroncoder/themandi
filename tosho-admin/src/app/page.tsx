@@ -1,6 +1,7 @@
 import { AnalyticsCard } from "./_components/analytics-card";
 import { RevenueChart } from "./_components/monthly-stats-chart";
-import { RecentSales } from "./_components/recent-sales";
+import { RecentSales } from "./_components/recent-sales-list";
+import { TopBooksAndAuthors } from "./_components/top-books-authors-card";
 
 export default async function Home() {
   return (
@@ -15,6 +16,8 @@ export default async function Home() {
         <RevenueChart />
         <RecentSales />
       </section>
+
+      <TopBooksAndAuthors />
     </main>
   );
 }

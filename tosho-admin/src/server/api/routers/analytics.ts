@@ -291,4 +291,60 @@ export const analyticsRouter = createTRPCRouter({
         createdAt: sale.createdAt,
       }));
     }),
+
+  getTopBooksAndAuthors: publicProcedure.query(async ({ ctx }) => {
+    const topBooks = await ctx.db.book.findMany({
+      select: {
+        id: true,
+        title: true,
+        purchases: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: {
+        purchases: {
+          _count: "desc",
+        },
+      },
+      take: 5,
+    });
+
+    const trendingAuthors = await ctx.db.author.findMany({
+      select: {
+        id: true,
+        name: true,
+        books: {
+          select: {
+            purchases: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        books: {
+          _count: "desc",
+        },
+      },
+      take: 5,
+    });
+
+    return {
+      topBooks: topBooks.map((book) => ({
+        title: book.title,
+        sales: book.purchases.length,
+      })),
+      trendingAuthors: trendingAuthors.map((author) => ({
+        name: author.name,
+        sales: author.books.reduce(
+          (acc, book) => acc + book.purchases.length,
+          0,
+        ),
+      })),
+    };
+  }),
 });
