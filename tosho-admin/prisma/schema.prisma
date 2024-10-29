@@ -2,19 +2,125 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  name      String
+  role      Role       @default(USER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  purchases Purchase[]
+  ratings   Rating[]
+  cart      Cart?
+}
 
-    @@index([name])
+enum Role {
+  ADMIN
+  USER
+}
+
+model Book {
+  id           String     @id @default(uuid())
+  title        String
+  description  String     @db.Text
+  price        Decimal    @db.Decimal(10, 2)
+  pdfUrl       String
+  thumbnailUrl String
+  publisher    String
+  rating       Float      @default(0)
+  releaseDate  DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  authors      Author[]
+  tags         Tag[]
+  genres       Genre[]
+  purchases    Purchase[]
+  ratings      Rating[]
+  cartItems    CartItem[]
+}
+
+model Author {
+  id        String   @id @default(uuid())
+  name      String
+  books     Book[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  books     Book[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Genre {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  books     Book[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Purchase {
+  id              String         @id @default(uuid())
+  userId          String
+  bookId          String
+  amount          Decimal        @db.Decimal(10, 2)
+  status          PurchaseStatus @default(PENDING)
+  stripePaymentId String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  user            User           @relation(fields: [userId], references: [id])
+  book            Book           @relation(fields: [bookId], references: [id])
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  rating    Int      @db.TinyInt
+  userId    String
+  bookId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  book      Book     @relation(fields: [bookId], references: [id])
+
+  @@unique([userId, bookId])
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id])
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  bookId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id])
+
+  @@unique([cartId, bookId])
 }
