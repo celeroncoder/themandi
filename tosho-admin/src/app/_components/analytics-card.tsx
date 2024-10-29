@@ -3,25 +3,25 @@ import { api } from "@/trpc/server";
 import { BookMarked, ChartLine, UsersRound } from "lucide-react";
 
 export async function AnalyticsCard() {
-  const booksData = await api.book.getAnalytics();
-  const userData = await api.user.getAnalytics();
-  const revenueData = await api.purchase.getAnalytics();
+  const booksData = await api.analytics.getBookStats();
+  const userData = await api.analytics.getUserStats();
+  const revenueData = await api.analytics.getRevenueStats();
 
   const cardData = {
     books: {
       icon: BookMarked,
       total: booksData.totalBooks,
-      gainFromLastMonth: booksData.percentageChange,
+      changeFromLastMonth: booksData.percentageChange,
     },
     users: {
       icon: UsersRound,
       total: userData.totalUsers,
-      gainFromLastMonth: userData.percentageChange,
+      changeFromLastMonth: userData.percentageChange,
     },
     revenue: {
       icon: ChartLine,
       total: revenueData.totalRevenue,
-      gainFromLastMonth: revenueData.percentageChange,
+      changeFromLastMonth: revenueData.percentageChange,
     },
   };
 
@@ -46,10 +46,11 @@ export async function AnalyticsCard() {
                   <span
                     className={cn(
                       "text-green-500",
-                      data.gainFromLastMonth < 0 && "text-red-500",
+                      parseFloat(data.changeFromLastMonth) < 0 &&
+                        "text-red-500",
                     )}
                   >
-                    {data.gainFromLastMonth}%
+                    {data.changeFromLastMonth}%
                   </span>{" "}
                   from last month.
                 </p>

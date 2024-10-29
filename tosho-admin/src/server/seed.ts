@@ -19,24 +19,29 @@ async function main() {
     prisma.user.deleteMany(),
   ]);
 
+  // Helper function to generate random dates within the last 12 months
+  function randomDateWithinLastYear() {
+    const today = new Date();
+    const pastYear = new Date(today.setFullYear(today.getFullYear() - 1));
+    return faker.date.between({ from: pastYear, to: new Date() });
+  }
+
   console.log("📝 Creating admin user...");
-  // Create admin user with mock Clerk authId
   const adminUser = await prisma.user.create({
     data: {
-      authId: `user_${faker.string.alphanumeric(24)}`, // Mock Clerk user ID format
+      authId: `user_${faker.string.alphanumeric(24)}`,
       role: Role.ADMIN,
     },
   });
 
   console.log("👥 Creating regular users...");
-  // Create regular users
   const users = await Promise.all(
-    Array(10)
+    Array(50) // Increased to generate more users
       .fill(null)
       .map(async () => {
         return prisma.user.create({
           data: {
-            authId: `user_${faker.string.alphanumeric(24)}`, // Mock Clerk user ID format
+            authId: `user_${faker.string.alphanumeric(24)}`,
             role: Role.USER,
           },
         });
@@ -44,9 +49,8 @@ async function main() {
   );
 
   console.log("✍️ Creating authors...");
-  // Create authors
   const authors = await Promise.all(
-    Array(20)
+    Array(50) // Increased to generate more authors
       .fill(null)
       .map(() => {
         return prisma.author.create({
@@ -58,7 +62,6 @@ async function main() {
   );
 
   console.log("🏷️ Creating tags...");
-  // Create tags
   const tagNames = [
     "Bestseller",
     "New Release",
@@ -78,7 +81,6 @@ async function main() {
   );
 
   console.log("📚 Creating genres...");
-  // Create genres
   const genreNames = [
     "Fiction",
     "Non-Fiction",
@@ -100,12 +102,10 @@ async function main() {
   );
 
   console.log("📖 Creating books...");
-  // Create books
   const books = await Promise.all(
-    Array(50)
+    Array(200) // Increased to generate more books
       .fill(null)
       .map(async () => {
-        // Random selection of related entities
         const bookAuthors = faker.helpers.arrayElements(authors, {
           min: 1,
           max: 3,
@@ -125,30 +125,26 @@ async function main() {
               max: 49.99,
               fractionDigits: 2,
             }),
-            pdfUrl: faker.internet.url(), // In production, this would be a real PDF URL
-            thumbnailUrl: faker.image.url(), // In production, this would be a real image URL
+            pdfUrl: faker.internet.url(),
+            thumbnailUrl: faker.image.url(),
             publisher: faker.company.name(),
             rating: faker.number.float({ min: 0, max: 5, fractionDigits: 2 }),
-            releaseDate: faker.date.past(),
+            releaseDate: randomDateWithinLastYear(), // Spread over last 12 months
             authors: {
               connect: bookAuthors.map((author) => ({ id: author.id })),
             },
-            tags: {
-              connect: bookTags.map((tag) => ({ id: tag.id })),
-            },
-            genres: {
-              connect: bookGenres.map((genre) => ({ id: genre.id })),
-            },
+            tags: { connect: bookTags.map((tag) => ({ id: tag.id })) },
+            genres: { connect: bookGenres.map((genre) => ({ id: genre.id })) },
           },
         });
       }),
   );
 
   console.log("🛒 Creating carts and cart items...");
-  // Create carts and cart items for some users
   await Promise.all(
-    users.slice(0, 5).map(async (user) => {
-      const cart = await prisma.cart.create({
+    users.slice(0, 25).map(async (user) => {
+      // Increased number of carts
+      await prisma.cart.create({
         data: {
           userId: user.id,
           items: {
@@ -164,9 +160,8 @@ async function main() {
   );
 
   console.log("💳 Creating purchases...");
-  // Create purchases
   const purchases = await Promise.all(
-    Array(100)
+    Array(300) // Increased to generate more purchases
       .fill(null)
       .map(async () => {
         const book = faker.helpers.arrayElement(books);
@@ -179,14 +174,13 @@ async function main() {
             amount: book.price,
             status: faker.helpers.arrayElement(Object.values(PurchaseStatus)),
             stripePaymentId: faker.string.alphanumeric(24),
+            createdAt: randomDateWithinLastYear(), // Purchases spread over last 12 months
           },
         });
       }),
   );
 
   console.log("⭐ Creating ratings...");
-
-  // Create ratings for purchased books
   for (const purchase of purchases.filter(
     (p) => p.status === PurchaseStatus.COMPLETED,
   )) {
@@ -210,7 +204,6 @@ async function main() {
     }
   }
 
-  // Update book ratings based on actual ratings
   console.log("📊 Updating book average ratings...");
   for (const book of books) {
     const ratings = await prisma.rating.findMany({

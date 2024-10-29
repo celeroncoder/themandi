@@ -1,4 +1,5 @@
 import { AnalyticsCard } from "./_components/analytics-card";
+import { RevenueChart } from "./_components/monthly-stats-chart";
 
 export default async function Home() {
   return (
@@ -8,6 +9,8 @@ export default async function Home() {
       </section>
 
       <AnalyticsCard />
+
+      <RevenueChart />
     </main>
   );
 }
