@@ -250,4 +250,45 @@ export const analyticsRouter = createTRPCRouter({
 
       return results;
     }),
+
+  getRecentSales: publicProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(5),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const recentSales = await ctx.db.purchase.findMany({
+        where: {
+          status: "COMPLETED",
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: input.limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              authId: true,
+            },
+          },
+          book: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+
+      return recentSales.map((sale) => ({
+        id: sale.id,
+        userId: sale.userId,
+        bookId: sale.bookId,
+        bookTitle: sale.book.title,
+        amount: sale.amount.toNumber(),
+        createdAt: sale.createdAt,
+      }));
+    }),
 });
