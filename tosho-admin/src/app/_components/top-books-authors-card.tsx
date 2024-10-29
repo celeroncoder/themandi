@@ -126,7 +126,7 @@ export function TopBooksAndAuthors() {
                 hide
               />
               <XAxis type="number" hide />
-              <Bar dataKey="sales" fill="hsl(var(--chart-4))" radius={4}>
+              <Bar dataKey="sales" fill="hsl(var(--chart-5))" radius={4}>
                 <LabelList
                   dataKey="title"
                   position="insideLeft"

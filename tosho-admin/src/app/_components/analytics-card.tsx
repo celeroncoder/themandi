@@ -26,7 +26,7 @@ export async function AnalyticsCard() {
   };
 
   return (
-    <section className="flex items-center justify-start gap-4 px-10 py-4">
+    <section className="flex flex-wrap items-center justify-start gap-4 px-10 py-4">
       {Object.keys(cardData).map((key) => {
         const data = cardData[key as keyof typeof cardData];
 
