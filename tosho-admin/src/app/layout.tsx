@@ -8,7 +8,7 @@ import { TRPCReactProvider } from "@/trpc/react";
 export const metadata: Metadata = {
   title: "Tosho Admin",
   description: "Admin | Tosho: the bookstore",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [{ rel: "icon", url: "/favicon.png" }],
 };
 
 export default function RootLayout({
