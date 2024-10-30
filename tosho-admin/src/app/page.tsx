@@ -5,9 +5,9 @@ import { TopBooksAndAuthors } from "./_components/top-books-authors-card";
 
 export default async function Home() {
   return (
-    <section className="">
+    <section>
       <section className="px-10 py-4">
-        <p className="text-4xl font-bold">Dashboard</p>
+        <p className="text-4xl font-bold">Analytics</p>
       </section>
 
       <AnalyticsCard />
