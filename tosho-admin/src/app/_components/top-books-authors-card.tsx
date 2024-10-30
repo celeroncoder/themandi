@@ -157,7 +157,7 @@ export function TopBooksAndAuthors() {
         </CardFooter>
       </Card>
 
-      <Card className="w-full max-w-lg">
+      <Card className="max-h-fit w-full max-w-lg">
         <CardHeader>
           <CardTitle>Trending Authors</CardTitle>
         </CardHeader>

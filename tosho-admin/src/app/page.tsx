@@ -1,23 +1,23 @@
 import { AnalyticsCard } from "./_components/analytics-card";
-import { RevenueChart } from "./_components/monthly-stats-chart";
-import { RecentSales } from "./_components/recent-sales-list";
+import { RevenueChart } from "./_components/revenue-chart";
+import { RecentSales } from "./_components/recent-sales";
 import { TopBooksAndAuthors } from "./_components/top-books-authors-card";
 
 export default async function Home() {
   return (
-    <main className="min-h-screen w-full">
+    <section className="">
       <section className="px-10 py-4">
         <p className="text-4xl font-bold">Dashboard</p>
       </section>
 
       <AnalyticsCard />
 
-      <section className="flex flex-wrap items-start justify-start gap-10 px-10 py-4">
+      <section className="flex flex-col gap-6 px-10 py-4 md:flex-row">
         <RevenueChart />
         <RecentSales />
       </section>
 
       <TopBooksAndAuthors />
-    </main>
+    </section>
   );
 }

@@ -9,7 +9,7 @@ export async function RecentSales() {
   });
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="max-h-fit w-full max-w-md">
       <CardHeader>
         <CardTitle>Recent Sales</CardTitle>
       </CardHeader>

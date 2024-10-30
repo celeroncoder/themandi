@@ -49,7 +49,7 @@ export function RevenueChart() {
 
   if (isLoading) {
     return (
-      <Card className="w-full max-w-xl">
+      <Card className="w-full max-w-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <Skeleton className="h-8 w-40" />
@@ -93,7 +93,7 @@ export function RevenueChart() {
   };
 
   return (
-    <Card className="w-full max-w-xl">
+    <Card className="w-full max-w-lg">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Monthly Revenue</CardTitle>
