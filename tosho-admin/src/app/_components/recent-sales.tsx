@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { currencyFormatter } from "@/lib/utils";
 import { api } from "@/trpc/server";
 
 export async function RecentSales() {
@@ -25,7 +26,7 @@ export async function RecentSales() {
             </div>
             <div className="flex items-center">
               <p className="text-sm font-semibold text-green-500">
-                +${sale.amount.toFixed(2)}
+                {currencyFormatter.format(sale.amount)}
               </p>
             </div>
           </div>

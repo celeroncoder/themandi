@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, currencyFormatter } from "@/lib/utils";
 import { api } from "@/trpc/server";
 import { BookMarked, ChartLine, UsersRound } from "lucide-react";
 
@@ -20,7 +20,7 @@ export async function AnalyticsCard() {
     },
     revenue: {
       icon: ChartLine,
-      total: revenueData.totalRevenue,
+      total: currencyFormatter.format(revenueData.totalRevenue),
       changeFromLastMonth: revenueData.percentageChange,
     },
   };

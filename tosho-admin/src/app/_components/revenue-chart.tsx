@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/trpc/react";
+import { currencyFormatter } from "@/lib/utils";
 
 type ChartData = {
   month: string;
@@ -49,7 +50,7 @@ export function RevenueChart() {
 
   if (isLoading) {
     return (
-      <Card className="w-full max-w-lg">
+      <Card className="w-full max-w-xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <Skeleton className="h-8 w-40" />
@@ -93,7 +94,7 @@ export function RevenueChart() {
   };
 
   return (
-    <Card className="w-full max-w-lg">
+    <Card className="w-full min-w-fit">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Monthly Revenue</CardTitle>
@@ -127,7 +128,7 @@ export function RevenueChart() {
                 tickFormatter={(value) => value.slice(0, 3)}
               />
               <YAxis
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `${currencyFormatter.format(value)}`}
                 tickLine={false}
                 axisLine={false}
               />
@@ -151,7 +152,7 @@ export function RevenueChart() {
                               Revenue
                             </span>
                             <span className="font-bold">
-                              ${data.revenue.toFixed(2)}
+                              {currencyFormatter.format(data.revenue)}
                             </span>
                           </div>
                           <div className="flex flex-col">
@@ -181,7 +182,7 @@ export function RevenueChart() {
                 <LabelList
                   dataKey="revenue"
                   position="top"
-                  formatter={(value: number) => `$${value.toFixed(0)}`}
+                  formatter={(value: number) => currencyFormatter.format(value)}
                   className="fill-foreground"
                   fontSize={12}
                 />
@@ -207,7 +208,7 @@ export function RevenueChart() {
             )}
           </div>
           <div className="text-sm text-muted-foreground">
-            Total revenue: ${totalRevenue.toFixed(2)}
+            Total revenue: {currencyFormatter.format(totalRevenue)}
           </div>
         </div>
         <div className="flex gap-4 text-sm text-muted-foreground">
