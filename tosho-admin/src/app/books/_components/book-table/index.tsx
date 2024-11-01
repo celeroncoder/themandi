@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -17,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   ColumnFiltersState,
   SortingState,
@@ -31,26 +32,30 @@ import {
 } from "@tanstack/react-table";
 import { api } from "@/trpc/react";
 import { columns } from "./columns";
+import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/table-skeleton";
 
-export function UserTable() {
+export function BookTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    publisher: false,
+    genres: false,
+    tags: false,
+  });
   const [rowSelection, setRowSelection] = useState({});
-  // const [cursor, setCursor] = useState<string | null>(null);
 
-  const { data, isLoading, fetchNextPage } = api.user.getUsers.useInfiniteQuery(
+  const { data, isLoading, fetchNextPage } = api.book.getBooks.useInfiniteQuery(
     { limit: 10 },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
 
-  const users = data?.pages.flatMap((page) => page.users) ?? [];
+  const books = data?.pages.flatMap((page) => page.books) ?? [];
 
   const table = useReactTable({
-    data: users,
+    data: books,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -75,6 +80,14 @@ export function UserTable() {
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
+        <Input
+          placeholder="Filter titles..."
+          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("title")?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">

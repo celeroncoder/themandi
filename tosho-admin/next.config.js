@@ -5,6 +5,17 @@
 await import("./src/env.js");
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+  images: {
+    remotePatterns: [
+      {
+        hostname: "picsum.photos",
+      },
+      {
+        hostname: "loremflickr.com",
+      },
+    ],
+  },
+};
 
 export default config;
