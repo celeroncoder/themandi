@@ -1,4 +1,11 @@
-import { BookOpen, ChartLine, Receipt, Settings, Users2 } from "lucide-react";
+import {
+  BookOpen,
+  ChartLine,
+  LogOut,
+  Receipt,
+  Settings,
+  Users2,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -12,6 +19,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "./theme-mode-toggle";
+import { Button } from "./ui/button";
+import { SignOutButton } from "@clerk/nextjs";
 
 // Menu items.
 const items = [
@@ -42,7 +51,7 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export async function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
@@ -66,6 +75,16 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SignOutButton>
+              <Button variant={"destructive"} className="w-full">
+                <LogOut />
+                <span className="text-sm">Sign Out</span>
+              </Button>
+            </SignOutButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <SidebarMenu>
           <SidebarMenuItem>
             <ModeToggle />
