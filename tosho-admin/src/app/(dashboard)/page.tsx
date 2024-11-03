@@ -1,7 +1,7 @@
-import { AnalyticsCard } from "./_components/analytics-card";
-import { RevenueChart } from "./_components/revenue-chart";
-import { RecentSales } from "./_components/recent-sales";
-import { TopBooksAndAuthors } from "./_components/top-books-authors-card";
+import { AnalyticsCard } from "../_components/analytics-card";
+import { RevenueChart } from "../_components/revenue-chart";
+import { RecentSales } from "../_components/recent-sales";
+import { TopBooksAndAuthors } from "../_components/top-books-authors-card";
 
 export default async function Home() {
   return (
