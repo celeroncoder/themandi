@@ -9,6 +9,10 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/toaster";
 
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { ourFileRouter } from "@/app/api/uploadthing/core";
+
 export const metadata: Metadata = {
   title: "Tosho Admin",
   description: "Admin | Tosho: the bookstore",
@@ -24,6 +28,15 @@ export default function RootLayout({
         <body className="overflow-auto scroll-smooth">
           <TRPCReactProvider>
             <SidebarProvider>
+              <NextSSRPlugin
+                /**
+                 * The `extractRouterConfig` will extract **only** the route configs
+                 * from the router to prevent additional information from being
+                 * leaked to the client. The data passed to the client is the same
+                 * as if you were to fetch `/api/uploadthing` directly.
+                 */
+                routerConfig={extractRouterConfig(ourFileRouter)}
+              />
               <AppSidebar />
               <main>
                 <SidebarTrigger />

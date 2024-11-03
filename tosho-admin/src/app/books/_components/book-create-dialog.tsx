@@ -42,7 +42,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { api } from "@/trpc/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -63,6 +63,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function BookCreateDialog() {
   const [open, setOpen] = useState(false);
+
+  const { toast } = useToast();
 
   const { data: authors = [] } = api.author.getAll.useQuery();
   const { data: tags = [] } = api.tag.getAll.useQuery();

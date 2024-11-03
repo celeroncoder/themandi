@@ -1,6 +1,9 @@
 import Image from "next/image";
 import { ColumnDef } from "@tanstack/react-table";
 import { Decimal } from "@prisma/client/runtime/library";
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 type Book = {
   id: string;
@@ -89,6 +92,19 @@ export const columns: ColumnDef<Book>[] = [
     cell: ({ row }) => {
       const tags = row.getValue("tags") as string[];
       return tags.join(", ");
+    },
+  },
+  {
+    accessorKey: "id",
+    header: "Details",
+    cell: ({ cell }) => {
+      return (
+        <Link href={`/books/${cell.getValue() as string}`}>
+          <Button size={"icon"} variant={"ghost"}>
+            <ChevronRight />
+          </Button>
+        </Link>
+      );
     },
   },
 ];

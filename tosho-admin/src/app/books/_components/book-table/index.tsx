@@ -35,13 +35,15 @@ import { columns } from "./columns";
 import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/table-skeleton";
 
-export function BookTable() {
+export const BookTable: React.FC<{}> = ({}) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     publisher: false,
     genres: false,
     tags: false,
+    purchaseCount: false,
+    releaseDate: false,
   });
   const [rowSelection, setRowSelection] = useState({});
 
@@ -200,4 +202,4 @@ export function BookTable() {
       </div>
     </div>
   );
-}
+};

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 
 export const bookRouter = createTRPCRouter({
   getBooks: publicProcedure
@@ -120,6 +121,103 @@ export const bookRouter = createTRPCRouter({
               error.message ||
               "An unexpected error occurred, please try again later.",
           });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An unexpected error occurred, please try again later.",
+        });
+      }
+    }),
+
+  getBook: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const book = await ctx.db.book.findUnique({
+        where: { id: input.id },
+        include: {
+          authors: true,
+          tags: true,
+          genres: true,
+        },
+      });
+
+      if (!book) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Book not found",
+        });
+      }
+
+      return book;
+    }),
+
+  updateBook: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        title: z.string().min(1, "Title is required"),
+        description: z.string().min(1, "Description is required"),
+        price: z.number().positive("Price must be positive"),
+        pdfUrl: z.string().url("Must be a valid URL"),
+        thumbnailUrl: z.string().url("Must be a valid URL"),
+        publisher: z.string().min(1, "Publisher is required"),
+        releaseDate: z.date(),
+        authors: z.array(z.string()).min(1, "At least one author is required"),
+        tags: z.array(z.string()),
+        genres: z.array(z.string()).min(1, "At least one genre is required"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const book = await ctx.db.book.update({
+          where: { id: input.id },
+          data: {
+            title: input.title,
+            description: input.description,
+            price: new Prisma.Decimal(input.price),
+            pdfUrl: input.pdfUrl,
+            thumbnailUrl: input.thumbnailUrl,
+            publisher: input.publisher,
+            releaseDate: input.releaseDate,
+            authors: {
+              set: [],
+              connectOrCreate: input.authors.map((name) => ({
+                where: { name },
+                create: { name },
+              })),
+            },
+            tags: {
+              set: [],
+              connectOrCreate: input.tags.map((name) => ({
+                where: { name },
+                create: { name },
+              })),
+            },
+            genres: {
+              set: [],
+              connectOrCreate: input.genres.map((name) => ({
+                where: { name },
+                create: { name },
+              })),
+            },
+          },
+          include: {
+            authors: true,
+            tags: true,
+            genres: true,
+          },
+        });
+
+        return book;
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === "P2002") {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message:
+                "A unique constraint would be violated on Author, Tag, or Genre. The book could not be updated.",
+            });
+          }
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
