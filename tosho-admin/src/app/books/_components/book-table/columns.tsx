@@ -19,19 +19,6 @@ type Book = {
 
 export const columns: ColumnDef<Book>[] = [
   {
-    accessorKey: "thumbnailUrl",
-    header: "Cover",
-    cell: ({ row }) => (
-      <Image
-        src={row.getValue("thumbnailUrl")}
-        alt={`Cover of ${row.getValue("title")}`}
-        width={64}
-        height={64}
-        className="w-16 object-cover"
-      />
-    ),
-  },
-  {
     accessorKey: "title",
     header: "Title",
   },

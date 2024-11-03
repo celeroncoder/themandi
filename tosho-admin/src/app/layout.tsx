@@ -7,6 +7,7 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Tosho Admin",
@@ -28,6 +29,7 @@ export default function RootLayout({
                 <SidebarTrigger />
                 {children}
               </main>
+              <Toaster />
             </SidebarProvider>
           </TRPCReactProvider>
         </body>

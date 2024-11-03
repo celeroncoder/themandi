@@ -32,8 +32,8 @@ model Book {
   title        String
   description  String     @db.Text
   price        Decimal    @db.Decimal(10, 2)
-  pdfUrl       String
-  thumbnailUrl String
+  pdfUrl       String     @default("")
+  thumbnailUrl String     @default("")
   publisher    String
   rating       Float      @default(0)
   releaseDate  DateTime   @default(now())
@@ -49,7 +49,7 @@ model Book {
 
 model Author {
   id        String   @id @default(uuid())
-  name      String
+  name      String   @unique // Make name unique
   books     Book[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
