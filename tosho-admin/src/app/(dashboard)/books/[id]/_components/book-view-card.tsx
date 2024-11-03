@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
 import { api, RouterOutputs } from "@/trpc/react";
+import Link from "next/link";
 
 export const BookViewCard: React.FC<{
   initialBookData: RouterOutputs["book"]["getBook"];
@@ -26,7 +27,7 @@ export const BookViewCard: React.FC<{
     <Card className="flex flex-[0.5] flex-col items-center justify-center">
       <CardHeader>
         <Image
-          src={book.thumbnailUrl}
+          src={book.thumbnailUrl || "/images/book-cover.png"}
           alt={book.title}
           width={400}
           height={150}
@@ -48,7 +49,7 @@ export const BookViewCard: React.FC<{
         <div className="flex w-full flex-wrap items-center justify-start gap-1 text-sm">
           Tags:
           {book.tags.map((tag) => (
-            <Badge variant={"outline"} className="block">
+            <Badge variant={"outline"} className="block" key={tag.id}>
               {tag.name}
             </Badge>
           ))}
@@ -56,7 +57,7 @@ export const BookViewCard: React.FC<{
         <div className="flex w-full flex-wrap items-center justify-start gap-1 text-sm">
           Genres:
           {book.genres.map((genre) => (
-            <Badge variant={"secondary"} className="block">
+            <Badge variant={"secondary"} className="block" key={genre.id}>
               {genre.name}
             </Badge>
           ))}
@@ -69,9 +70,15 @@ export const BookViewCard: React.FC<{
         </div>
       </CardContent>
       <CardFooter className="w-full">
-        <Button className="w-full">
-          <FileDown /> Download
-        </Button>
+        <Link
+          href={book.pdfUrl ? book.pdfUrl : "#download"}
+          target="__blank"
+          className="w-full"
+        >
+          <Button className="w-full">
+            <FileDown /> Download
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

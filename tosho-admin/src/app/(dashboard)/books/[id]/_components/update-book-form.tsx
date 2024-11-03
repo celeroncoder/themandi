@@ -406,6 +406,7 @@ export const BookUpdateForm: React.FC<{
                     <UploadDropzone
                       endpoint="pdfUploader"
                       onClientUploadComplete={(res) => {
+                        console.log("upload complete!", res);
                         const url = res[0]?.url;
                         if (url) {
                           form.setValue("pdfUrl", url);
@@ -416,6 +417,7 @@ export const BookUpdateForm: React.FC<{
                         }
                       }}
                       onUploadError={(error) => {
+                        console.log("upload error!", error);
                         toast({
                           title: "Error",
                           description: error.message,

@@ -1,4 +1,4 @@
-import { api } from "@/trpc/server";
+import { api, HydrateClient } from "@/trpc/server";
 import { BookViewCard } from "./_components/book-view-card";
 import { BookUpdateForm } from "./_components/update-book-form";
 
@@ -16,20 +16,22 @@ export default async function BookDetailsPage({
   if (!book) return <div>Book Not Found!</div>;
 
   return (
-    <section className="w-full px-10">
-      <section className="flex items-center justify-between py-4">
-        <p className="text-4xl font-bold">{book.title}</p>
-      </section>
+    <HydrateClient>
+      <section className="w-full px-10">
+        <section className="flex items-center justify-between py-4">
+          <p className="text-4xl font-bold">{book.title}</p>
+        </section>
 
-      <section className="flex w-[1024px] flex-wrap items-start justify-between gap-10">
-        <BookViewCard initialBookData={book} />
-        <BookUpdateForm
-          initialBookData={book}
-          authors={authors}
-          genres={genres}
-          tags={tags}
-        />
+        <section className="flex w-[1024px] flex-wrap items-start justify-between gap-10">
+          <BookViewCard initialBookData={book} />
+          <BookUpdateForm
+            initialBookData={book}
+            authors={authors}
+            genres={genres}
+            tags={tags}
+          />
+        </section>
       </section>
-    </section>
+    </HydrateClient>
   );
 }
