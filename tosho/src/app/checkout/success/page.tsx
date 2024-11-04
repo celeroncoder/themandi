@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
 import Cookies from "js-cookie";
+import Link from "next/link";
 
-export default function CheckoutSuccessPage() {
-  const router = useRouter();
+function CheckoutSuccessContent({
+  setIsProcessing,
+}: {
+  setIsProcessing: (value: boolean) => void;
+}) {
   const searchParams = useSearchParams();
-  const [isProcessing, setIsProcessing] = useState(true);
-
   const { mutate: clearCart } = api.cart.clearCart.useMutation();
   const { mutate: createPurchases } = api.cart.createPurchases.useMutation();
 
@@ -37,6 +39,22 @@ export default function CheckoutSuccessPage() {
     }
   }, [searchParams, createPurchases, clearCart]);
 
+  return (
+    <div className="container mx-auto flex h-screen flex-col items-center justify-center px-4">
+      <h1 className="mb-8 text-4xl font-bold">Thank You for Your Purchase!</h1>
+      <p className="mb-8 text-xl">
+        Your order has been successfully processed.
+      </p>
+      <Link href="/">
+        <Button>Continue Shopping</Button>
+      </Link>
+    </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  const [isProcessing, setIsProcessing] = useState(true);
+
   if (isProcessing) {
     return (
       <div className="container mx-auto flex h-screen flex-col items-center justify-center px-4">
@@ -47,12 +65,8 @@ export default function CheckoutSuccessPage() {
   }
 
   return (
-    <div className="container mx-auto flex h-screen flex-col items-center justify-center px-4">
-      <h1 className="mb-8 text-4xl font-bold">Thank You for Your Purchase!</h1>
-      <p className="mb-8 text-xl">
-        Your order has been successfully processed.
-      </p>
-      <Button onClick={() => router.push("/")}>Continue Shopping</Button>
-    </div>
+    <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
+      <CheckoutSuccessContent setIsProcessing={setIsProcessing} />
+    </Suspense>
   );
 }

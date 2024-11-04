@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } },
+  // @ts-ignore
+  context: { params: Promise<{ sessionId: string }> },
 ) {
-  const { sessionId } = params;
+  const { sessionId } = await context.params;
 
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
