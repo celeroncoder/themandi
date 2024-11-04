@@ -1,7 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/server";
 
 export default async function CreateAccountPage() {
