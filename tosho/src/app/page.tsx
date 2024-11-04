@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,16 +11,38 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowDown, Loader2, ShoppingCart } from "lucide-react";
+import { ArrowDown, Loader2, LogInIcon, ShoppingCart } from "lucide-react";
 import { api } from "@/trpc/react";
 import { BookCard } from "./_component/book-card";
+import { SignedOut, UserButton, useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import Cookies from "js-cookie";
 
-export default function Component() {
+export default function Home() {
+  const { user } = useUser();
+  const [cartItemCount, setCartItemCount] = useState(0);
+
   const { data: tags, isLoading: isLoadingTags } = api.tag.getAll.useQuery();
   const { data: genres, isLoading: isLoadingGenres } =
     api.genre.getAll.useQuery();
   const { data: authors, isLoading: isLoadingAuthors } =
     api.author.getAll.useQuery();
+
+  const { data: cartItems, isLoading: isLoadingCart } =
+    api.cart.getCartItems.useQuery(undefined, { enabled: !!user });
+
+  useEffect(() => {
+    if (user && cartItems) {
+      setCartItemCount(
+        cartItems.reduce((total, item) => total + item.quantity, 0),
+      );
+    } else if (!user) {
+      const cart = JSON.parse(Cookies.get("cart") || "[]");
+      setCartItemCount(
+        cart.reduce((total: number, item: any) => total + item.quantity, 0),
+      );
+    }
+  }, [user, cartItems]);
 
   const [filters, setFilters] = useState({
     title: "",
@@ -64,12 +86,28 @@ export default function Component() {
               A random book-store...
             </p>
           </div>
-          <Button variant="outline" size="icon" className="relative">
-            <ShoppingCart className="h-5 w-5" />
-            <span className="bg-primary text-primary-foreground absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs">
-              0
-            </span>
-          </Button>
+          <div className="flex items-center justify-between gap-4">
+            <Button variant="outline" size="icon" className="relative">
+              <ShoppingCart className="h-5 w-5" />
+              <span className="bg-primary text-primary-foreground absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs">
+                {isLoadingCart ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  cartItemCount
+                )}
+              </span>
+            </Button>
+
+            <SignedOut>
+              <Link href={"/sign-in"}>
+                <Button>
+                  Sign In <LogInIcon />
+                </Button>
+              </Link>
+            </SignedOut>
+
+            <UserButton />
+          </div>
         </div>
       </header>
 

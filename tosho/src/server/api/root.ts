@@ -3,6 +3,7 @@ import { bookRouter } from "./routers/book";
 import { tagRouter } from "./routers/tag";
 import { genreRouter } from "./routers/genre";
 import { authorRouter } from "./routers/author";
+import { cartRouter } from "./routers/cart";
 
 /**
  * This is the primary router for your server.
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   tag: tagRouter,
   genre: genreRouter,
   author: authorRouter,
+  cart: cartRouter,
 });
 
 // export type definition of API
