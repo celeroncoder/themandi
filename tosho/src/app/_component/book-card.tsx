@@ -25,7 +25,14 @@ export const BookCard: React.FC<{
   const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
   const { user } = useUser();
-  const addToCartMutation = api.cart.addToCart.useMutation();
+
+  const trpcCtx = api.useContext();
+  const addToCartMutation = api.cart.addToCart.useMutation({
+    onSuccess() {
+      trpcCtx.cart.getCartItems.invalidate();
+      trpcCtx.cart.getCartItems.refetch();
+    },
+  });
 
   const handleAddToCart = async () => {
     setIsAdding(true);

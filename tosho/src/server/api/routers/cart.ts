@@ -10,10 +10,16 @@ export const cartRouter = createTRPCRouter({
       throw new Error("You must be logged in to add items to your cart.");
     }
 
-    const dbUserId = ""; // TODO: fetch this...
+    const dbUser = await ctx.db.user.findUnique({
+      where: { authId: userId },
+    });
+
+    if (!dbUser) {
+      throw new Error("User not found.");
+    }
 
     const cart = await ctx.db.cart.findUnique({
-      where: { userId: dbUserId },
+      where: { userId: dbUser.id },
       include: {
         items: {
           include: {
@@ -53,15 +59,23 @@ export const cartRouter = createTRPCRouter({
         throw new Error("You must be logged in to add items to your cart.");
       }
 
-      const dbUserId = ""; // TODO: fetch this...
+      const dbUser = await ctx.db.user.findUnique({
+        where: { authId: userId },
+      });
+
+      if (!dbUser) {
+        throw new Error("User not found.");
+      }
+
+      console.log(dbUser);
 
       let cart = await ctx.db.cart.findUnique({
-        where: { userId },
+        where: { userId: dbUser.id },
       });
 
       if (!cart) {
         cart = await ctx.db.cart.create({
-          data: { userId },
+          data: { user: { connect: { id: dbUser.id } } },
         });
       }
 
