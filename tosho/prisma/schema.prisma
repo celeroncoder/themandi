@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -92,7 +92,7 @@ enum PurchaseStatus {
 
 model Rating {
   id        String   @id @default(uuid())
-  rating    Int      @db.TinyInt
+  rating    Int
   userId    String
   bookId    String
   createdAt DateTime @default(now())
