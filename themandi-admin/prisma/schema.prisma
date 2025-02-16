@@ -25,82 +25,91 @@ model User {
 enum Role {
   ADMIN
   USER
+  FARMER
 }
 
-model Book {
-  id           String     @id @default(uuid())
-  title        String
-  description  String     @db.Text
-  price        Decimal    @db.Decimal(10, 2)
-  pdfUrl       String     @default("")
-  thumbnailUrl String     @default("")
-  publisher    String
-  rating       Float      @default(0)
-  releaseDate  DateTime   @default(now())
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  authors      Author[]
-  tags         Tag[]
-  genres       Genre[]
-  purchases    Purchase[]
-  ratings      Rating[]
-  cartItems    CartItem[]
+model Product {
+  id          String     @id @default(uuid())
+  title       String
+  description String     @db.Text
+  price       Decimal    @db.Decimal(10, 2)
+  imageUrl    String     @default("")
+  stock       Int        @default(0)
+  unit        String
+  harvestDate DateTime?
+  expiryDate  DateTime?
+  rating      Float      @default(0)
+  isOrganic   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  farmers     Farmer[]
+  categories  Category[]
+  tags        Tag[]
+  purchases   Purchase[]
+  ratings     Rating[]
+  cartItems   CartItem[]
 }
 
-model Author {
-  id        String   @id @default(uuid())
-  name      String   @unique // Make name unique
-  books     Book[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Farmer {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String    @db.Text
+  location    String
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Tag {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  books     Book[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String    @id @default(uuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
-model Genre {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  books     Book[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Purchase {
   id              String         @id @default(uuid())
   userId          String
-  bookId          String
+  productId       String
   amount          Decimal        @db.Decimal(10, 2)
+  quantity        Int            @default(1)
   status          PurchaseStatus @default(PENDING)
   stripePaymentId String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   user            User           @relation(fields: [userId], references: [id])
-  book            Book           @relation(fields: [bookId], references: [id])
+  product         Product        @relation(fields: [productId], references: [id])
 }
 
 enum PurchaseStatus {
   PENDING
   COMPLETED
   FAILED
+  SHIPPED
+  DELIVERED
 }
 
 model Rating {
   id        String   @id @default(uuid())
   rating    Int
+  comment   String   @db.Text
   userId    String
-  bookId    String
+  productId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id])
-  book      Book     @relation(fields: [bookId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 
-  @@unique([userId, bookId])
+  @@unique([userId, productId])
 }
 
 model Cart {
@@ -115,11 +124,12 @@ model Cart {
 model CartItem {
   id        String   @id @default(uuid())
   cartId    String
-  bookId    String
+  productId String
+  quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  book      Book     @relation(fields: [bookId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 
-  @@unique([cartId, bookId])
+  @@unique([cartId, productId])
 }
