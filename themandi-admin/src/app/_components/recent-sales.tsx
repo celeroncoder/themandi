@@ -1,10 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { currencyFormatter } from "@/lib/utils";
 import { api } from "@/trpc/server";
+import { format } from "date-fns";
 
 export async function RecentSales() {
-  // TODO: use the authId from here to fetch the actual names and avatar of the users...
-
   const recentSales = await api.analytics.getRecentSales({
     limit: 5,
   });
@@ -21,8 +20,15 @@ export async function RecentSales() {
             className="flex items-center justify-between space-x-4"
           >
             <div className="space-y-1">
-              <p className="text-sm font-medium leading-none">{sale.userId}</p>
-              <p className="text-sm text-muted-foreground">{sale.bookTitle}</p>
+              <p className="text-sm font-medium leading-none">
+                {sale.productTitle}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Farmer: {sale.farmerNames}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {format(sale.createdAt, "MMM d, yyyy")}
+              </p>
             </div>
             <div className="flex items-center">
               <p className="text-sm font-semibold text-green-500">

@@ -3,9 +3,8 @@ import { format, startOfMonth, subMonths } from "date-fns";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const analyticsRouter = createTRPCRouter({
-  getBookStats: publicProcedure.query(async ({ ctx }) => {
+  getProductStats: publicProcedure.query(async ({ ctx }) => {
     const currentDate = new Date();
-
     const firstDayOfThisMonth = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
@@ -22,9 +21,9 @@ export const analyticsRouter = createTRPCRouter({
       1,
     );
 
-    const totalBooks = await ctx.db.book.count();
+    const totalProducts = await ctx.db.product.count();
 
-    const booksThisMonth = await ctx.db.book.count({
+    const productsThisMonth = await ctx.db.product.count({
       where: {
         createdAt: {
           gte: firstDayOfThisMonth,
@@ -33,7 +32,7 @@ export const analyticsRouter = createTRPCRouter({
       },
     });
 
-    const booksLastMonth = await ctx.db.book.count({
+    const productsLastMonth = await ctx.db.product.count({
       where: {
         createdAt: {
           gte: firstDayOfLastMonth,
@@ -42,23 +41,22 @@ export const analyticsRouter = createTRPCRouter({
       },
     });
 
-    const percentageChange = booksLastMonth
-      ? ((booksThisMonth - booksLastMonth) / booksLastMonth) * 100
-      : booksThisMonth > 0
-        ? 100 // if there were no books last month, we consider it a 100% increase if there are new books this month
-        : 0; // if there were no books last month and none this month, change is 0
+    const percentageChange = productsLastMonth
+      ? ((productsThisMonth - productsLastMonth) / productsLastMonth) * 100
+      : productsThisMonth > 0
+        ? 100
+        : 0;
 
     return {
-      totalBooks,
-      booksThisMonth,
-      booksLastMonth,
+      totalProducts,
+      productsThisMonth,
+      productsLastMonth,
       percentageChange: percentageChange.toFixed(2),
     };
   }),
 
   getRevenueStats: publicProcedure.query(async ({ ctx }) => {
     const currentDate = new Date();
-
     const firstDayOfThisMonth = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
@@ -133,9 +131,81 @@ export const analyticsRouter = createTRPCRouter({
     };
   }),
 
+  getTopProducts: publicProcedure.query(async ({ ctx }) => {
+    const topProducts = await ctx.db.product.findMany({
+      take: 5,
+      orderBy: {
+        purchases: {
+          _count: "desc",
+        },
+      },
+      include: {
+        purchases: true,
+        farmers: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    return topProducts.map((product) => ({
+      id: product.id,
+      title: product.title,
+      farmers: product.farmers.map((farmer) => farmer.name),
+      totalSales: product.purchases.length,
+      revenue: product.purchases.reduce(
+        (sum, purchase) => sum + purchase.amount.toNumber(),
+        0,
+      ),
+    }));
+  }),
+
+  getPeriodicStats: publicProcedure
+    .input(z.object({ period: z.enum(["6months", "12months"]) }))
+    .query(async ({ input, ctx }) => {
+      const monthsToShow = input.period === "6months" ? 6 : 12;
+      const startDate = startOfMonth(subMonths(new Date(), monthsToShow - 1));
+
+      const sales = await ctx.db.purchase.groupBy({
+        by: ["createdAt"],
+        where: {
+          createdAt: {
+            gte: startDate,
+          },
+          status: "COMPLETED",
+        },
+        _sum: {
+          amount: true,
+        },
+        _count: {
+          id: true,
+        },
+      });
+
+      const results = [];
+      for (let i = 0; i < monthsToShow; i++) {
+        const monthStart = startOfMonth(
+          subMonths(new Date(), monthsToShow - i - 1),
+        );
+        const monthLabel = format(monthStart, "yyyy-MM");
+
+        const monthData = sales.find(
+          (s) => format(s.createdAt, "yyyy-MM") === monthLabel,
+        );
+
+        results.push({
+          month: monthLabel,
+          revenue: Number(monthData?._sum.amount ?? 0),
+          sales: monthData?._count.id ?? 0,
+        });
+      }
+
+      return results;
+    }),
+
   getUserStats: publicProcedure.query(async ({ ctx }) => {
     const currentDate = new Date();
-
     const firstDayOfThisMonth = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
@@ -186,71 +256,6 @@ export const analyticsRouter = createTRPCRouter({
     };
   }),
 
-  getPeriodicStats: publicProcedure
-    .input(z.object({ period: z.enum(["6months", "12months"]) }))
-    .query(async ({ input, ctx }) => {
-      const monthsToShow = input.period === "6months" ? 6 : 12;
-      const startDate = startOfMonth(subMonths(new Date(), monthsToShow - 1));
-
-      // 1. Get monthly revenue and books sold (COMPLETED purchases)
-      const purchases = await ctx.db.purchase.groupBy({
-        by: ["createdAt"],
-        where: {
-          createdAt: {
-            gte: startDate,
-          },
-          status: "COMPLETED",
-        },
-        _sum: {
-          amount: true,
-        },
-        _count: {
-          bookId: true,
-        },
-      });
-
-      // 2. Get new users created each month within the period
-      const users = await ctx.db.user.groupBy({
-        by: ["createdAt"],
-        where: {
-          createdAt: {
-            gte: startDate,
-          },
-        },
-        _count: {
-          id: true,
-        },
-      });
-
-      // 3. Organize data into a monthly format
-      const results = [];
-      for (let i = 0; i < monthsToShow; i++) {
-        const monthStart = startOfMonth(
-          subMonths(new Date(), monthsToShow - i - 1),
-        );
-        const monthLabel = format(monthStart, "yyyy-MM");
-
-        const monthRevenue =
-          purchases.find((p) => format(p.createdAt, "yyyy-MM") === monthLabel)
-            ?._sum.amount || 0;
-        const booksSold =
-          purchases.find((p) => format(p.createdAt, "yyyy-MM") === monthLabel)
-            ?._count.bookId || 0;
-        const newUsers =
-          users.find((u) => format(u.createdAt, "yyyy-MM") === monthLabel)
-            ?._count.id || 0;
-
-        results.push({
-          month: monthLabel,
-          revenue: Number(monthRevenue),
-          books: booksSold,
-          users: newUsers,
-        });
-      }
-
-      return results;
-    }),
-
   getRecentSales: publicProcedure
     .input(
       z.object({
@@ -267,16 +272,10 @@ export const analyticsRouter = createTRPCRouter({
         },
         take: input.limit,
         include: {
-          user: {
-            select: {
-              id: true,
-              authId: true,
-            },
-          },
-          book: {
-            select: {
-              id: true,
-              title: true,
+          user: true,
+          product: {
+            include: {
+              farmers: true,
             },
           },
         },
@@ -285,66 +284,12 @@ export const analyticsRouter = createTRPCRouter({
       return recentSales.map((sale) => ({
         id: sale.id,
         userId: sale.userId,
-        bookId: sale.bookId,
-        bookTitle: sale.book.title,
+        productTitle: sale.product.title,
+        farmerNames: sale.product.farmers
+          .map((farmer) => farmer.name)
+          .join(", "),
         amount: sale.amount.toNumber(),
         createdAt: sale.createdAt,
       }));
     }),
-
-  getTopBooksAndAuthors: publicProcedure.query(async ({ ctx }) => {
-    const topBooks = await ctx.db.book.findMany({
-      select: {
-        id: true,
-        title: true,
-        purchases: {
-          select: {
-            id: true,
-          },
-        },
-      },
-      orderBy: {
-        purchases: {
-          _count: "desc",
-        },
-      },
-      take: 5,
-    });
-
-    const trendingAuthors = await ctx.db.author.findMany({
-      select: {
-        id: true,
-        name: true,
-        books: {
-          select: {
-            purchases: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        books: {
-          _count: "desc",
-        },
-      },
-      take: 5,
-    });
-
-    return {
-      topBooks: topBooks.map((book) => ({
-        title: book.title,
-        sales: book.purchases.length,
-      })),
-      trendingAuthors: trendingAuthors.map((author) => ({
-        name: author.name,
-        sales: author.books.reduce(
-          (acc, book) => acc + book.purchases.length,
-          0,
-        ),
-      })),
-    };
-  }),
 });

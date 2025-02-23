@@ -1,7 +1,7 @@
 import { AnalyticsCard } from "../_components/analytics-card";
 import { RevenueChart } from "../_components/revenue-chart";
 import { RecentSales } from "../_components/recent-sales";
-import { TopBooksAndAuthors } from "../_components/top-books-authors-card";
+import { TopProductsAndFarmers } from "../_components/top-products-farmer";
 
 export default async function Home() {
   return (
@@ -17,7 +17,7 @@ export default async function Home() {
         <RecentSales />
       </section>
 
-      <TopBooksAndAuthors />
+      <TopProductsAndFarmers />
     </section>
   );
 }

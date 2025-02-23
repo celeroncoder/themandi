@@ -10,7 +10,7 @@ import {
   YAxis,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, TrendingDown, BookOpen, Users } from "lucide-react";
+import { TrendingUp, TrendingDown, ShoppingBasket, Tag } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -34,14 +34,12 @@ import { currencyFormatter } from "@/lib/utils";
 type ChartData = {
   month: string;
   revenue: number;
-  books: number;
-  users: number;
+  sales: number;
 };
 
 export function RevenueChart() {
   const [period, setPeriod] = useState<"6months" | "12months">("6months");
 
-  // Fetch data using tRPC
   const {
     data: chartData = [],
     isLoading,
@@ -68,7 +66,6 @@ export function RevenueChart() {
           </div>
           <div className="flex w-full justify-end gap-4">
             <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-24" />
           </div>
         </CardFooter>
       </Card>
@@ -78,8 +75,7 @@ export function RevenueChart() {
   if (error) return <div>Error: {error.message}</div>;
 
   const totalRevenue = chartData.reduce((sum, data) => sum + data.revenue, 0);
-  const totalBooks = chartData.reduce((sum, data) => sum + data.books, 0);
-  const totalUsers = chartData.reduce((sum, data) => sum + data.users, 0);
+  const totalSales = chartData.reduce((sum, data) => sum + data.sales, 0);
   const lastMonthRevenue = chartData[chartData.length - 1]?.revenue || 0;
   const previousMonthRevenue = chartData[chartData.length - 2]?.revenue || 0;
   const revenueChange = previousMonthRevenue
@@ -111,7 +107,7 @@ export function RevenueChart() {
             </SelectContent>
           </Select>
         </div>
-        <CardDescription>Revenue from book purchases</CardDescription>
+        <CardDescription>Revenue from product sales</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -125,7 +121,7 @@ export function RevenueChart() {
                 dataKey="month"
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => value.slice(0, 3)}
+                tickFormatter={(value) => value.slice(5)} // Show only MM part
               />
               <YAxis
                 tickFormatter={(value) => `${currencyFormatter.format(value)}`}
@@ -157,15 +153,9 @@ export function RevenueChart() {
                           </div>
                           <div className="flex flex-col">
                             <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              Books Sold
+                              Products Sold
                             </span>
-                            <span className="font-bold">{data.books}</span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              New Users
-                            </span>
-                            <span className="font-bold">{data.users}</span>
+                            <span className="font-bold">{data.sales}</span>
                           </div>
                         </div>
                       </div>
@@ -213,12 +203,8 @@ export function RevenueChart() {
         </div>
         <div className="flex gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
-            <BookOpen className="h-4 w-4" />
-            {totalBooks} books sold
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            {totalUsers} new users
+            <ShoppingBasket className="h-4 w-4" />
+            {totalSales} products sold
           </div>
         </div>
       </CardFooter>

@@ -13,8 +13,8 @@ import { ourFileRouter } from "@/app/api/uploadthing/core";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Tosho Admin",
-  description: "Admin | Tosho: the bookstore",
+  title: "theमंडी Admin",
+  description: "Admin | theमंडी: direct from farmers",
   icons: [{ rel: "icon", url: "/favicon.png" }],
 };
 

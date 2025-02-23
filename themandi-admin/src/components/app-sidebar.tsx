@@ -5,6 +5,7 @@ import {
   Receipt,
   Settings,
   Users2,
+  WheatIcon,
 } from "lucide-react";
 
 import {
@@ -35,9 +36,9 @@ const items = [
     icon: Users2,
   },
   {
-    title: "Books",
-    url: "/books",
-    icon: BookOpen,
+    title: "Products",
+    url: "/products",
+    icon: WheatIcon,
   },
   {
     title: "Purchases",

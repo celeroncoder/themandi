@@ -34,30 +34,40 @@ import { api } from "@/trpc/react";
 import { columns } from "./columns";
 import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/table-skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ProductCreateDialog } from "../product-create-dialog";
 
-export const BookTable: React.FC<{}> = ({}) => {
+export const ProductTable: React.FC = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    publisher: false,
-    genres: false,
+    imageUrl: true,
+    harvestDate: false,
+    expiryDate: false,
     tags: false,
     purchaseCount: false,
-    releaseDate: false,
+    revenue: false,
   });
   const [rowSelection, setRowSelection] = useState({});
 
-  const { data, isLoading, fetchNextPage } = api.book.getBooks.useInfiniteQuery(
-    { limit: 10 },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
-  );
+  const { data, isLoading, fetchNextPage } =
+    api.product.getProducts.useInfiniteQuery(
+      { limit: 10 },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
 
-  const books = data?.pages.flatMap((page) => page.books) ?? [];
+  const products = data?.pages.flatMap((page) => page.products) ?? [];
 
   const table = useReactTable({
-    data: books,
+    data: products,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -79,9 +89,24 @@ export const BookTable: React.FC<{}> = ({}) => {
     return <TableSkeleton />;
   }
 
+  if (!products || products.length === 0) {
+    return (
+      <div className="flex min-h-[400px] min-w-full flex-col items-center justify-center rounded-md border border-dashed px-10 py-5">
+        <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+          <h3 className="mt-4 text-lg font-semibold">No products added</h3>
+          <p className="mb-4 mt-2 text-sm text-muted-foreground">
+            You haven&apos;t added any products yet. Add your first product to
+            get started.
+          </p>
+          <ProductCreateDialog />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex items-center gap-4 py-4">
         <Input
           placeholder="Filter titles..."
           value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
@@ -90,6 +115,42 @@ export const BookTable: React.FC<{}> = ({}) => {
           }
           className="max-w-sm"
         />
+
+        {/* Category Filter */}
+        <Select
+          onValueChange={(value) =>
+            table.getColumn("categories")?.setFilterValue(value)
+          }
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            {/* <SelectItem value="">All Categories</SelectItem> */}
+            {/* Add your categories here */}
+          </SelectContent>
+        </Select>
+
+        {/* Organic Filter */}
+        <Select
+          onValueChange={(value) =>
+            table
+              .getColumn("isOrganic")
+              ?.setFilterValue(
+                value === "true" ? true : value === "false" ? false : undefined,
+              )
+          }
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Products" />
+          </SelectTrigger>
+          <SelectContent>
+            {/* <SelectItem value="">All Products</SelectItem> */}
+            <SelectItem value="true">Organic Only</SelectItem>
+            <SelectItem value="false">Non-Organic Only</SelectItem>
+          </SelectContent>
+        </Select>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
