@@ -1,31 +1,86 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
+import { Role } from "@prisma/client";
 
 export const userRouter = createTRPCRouter({
-  getUser: publicProcedure
-    .input(z.object({ authId: z.string() }))
+  getAll: publicProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).nullish(),
+        cursor: z.string().nullish(),
+        role: z.enum(["ADMIN", "USER", "FARMER"]).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
-      return await ctx.db.user.findUnique({ where: { authId: input.authId } });
+      const limit = input.limit ?? 50;
+      const { cursor, role } = input;
+
+      const users = await ctx.db.user.findMany({
+        take: limit + 1,
+        cursor: cursor ? { id: cursor } : undefined,
+        where: role ? { role } : undefined,
+        orderBy: { createdAt: "desc" },
+        include: {
+          purchases: true,
+          ratings: true,
+          cart: {
+            include: {
+              items: true,
+            },
+          },
+        },
+      });
+
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (users.length > limit) {
+        const nextItem = users.pop();
+        nextCursor = nextItem!.id;
+      }
+
+      const usersWithStats = users.map((user) => ({
+        ...user,
+        totalPurchases: user.purchases.length,
+        totalSpent: user.purchases.reduce(
+          (sum, purchase) => sum + purchase.amount.toNumber(),
+          0,
+        ),
+        cartItemCount: user.cart?.items.length ?? 0,
+      }));
+
+      return {
+        users: usersWithStats,
+        nextCursor,
+      };
     }),
-  createUser: publicProcedure
+
+  create: publicProcedure
     .input(
       z.object({
         authId: z.string(),
+        role: z.enum(["ADMIN", "USER", "FARMER"]).default("USER"),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const user = await ctx.db.user.findUnique({
-        where: { authId: input.authId },
-      });
-
-      if (user) {
-        return user;
-      }
-
       return await ctx.db.user.create({
-        data: {
-          authId: input.authId,
-        },
+        data: input,
       });
     }),
+
+  updateRole: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        role: z.enum(["ADMIN", "USER", "FARMER"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.user.update({
+        where: { id: input.id },
+        data: { role: input.role },
+      });
+    }),
+
+  count: publicProcedure.query(async ({ ctx }) => {
+    return await ctx.db.user.count();
+  }),
 });

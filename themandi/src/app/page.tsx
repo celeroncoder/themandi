@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,23 +11,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowDown, Loader2 } from "lucide-react";
+import { ArrowDown, Loader } from "lucide-react";
 import { api } from "@/trpc/react";
-import { BookCard } from "./_component/book-card";
 import { Header } from "./_component/header";
+
+// You'll need to create this component separately
+import { ProductCard } from "./_component/product-card";
 
 export default function Home() {
   const { data: tags, isLoading: isLoadingTags } = api.tag.getAll.useQuery();
-  const { data: genres, isLoading: isLoadingGenres } =
-    api.genre.getAll.useQuery();
-  const { data: authors, isLoading: isLoadingAuthors } =
-    api.author.getAll.useQuery();
+  const { data: categories, isLoading: isLoadingCategories } =
+    api.category.getAll.useQuery();
+  const { data: farmers, isLoading: isLoadingFarmers } =
+    api.farmer.getAll.useQuery();
 
   const [filters, setFilters] = useState({
     title: "",
-    author: "",
+    farmer: "",
     tag: "",
-    genre: "",
+    category: "",
   });
 
   const {
@@ -39,9 +41,14 @@ export default function Home() {
     isLoading,
     isError,
     error,
-  } = api.book.getBooks.useInfiniteQuery(filters, {
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-  });
+  } = api.product.getProducts.useInfiniteQuery(
+    {
+      limit: 12,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -59,7 +66,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-gray-100 via-gray-300 to-gray-500">
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Input
             placeholder="Search by title"
             value={filters.title}
@@ -67,20 +74,20 @@ export default function Home() {
             className="bg-white"
           />
 
-          {isLoadingAuthors ? (
+          {isLoadingFarmers ? (
             <Skeleton className="h-10 w-full" />
           ) : (
             <Select
-              value={filters.author}
-              onValueChange={(value) => handleFilterChange("author", value)}
+              value={filters.farmer}
+              onValueChange={(value) => handleFilterChange("farmer", value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select an author" />
+                <SelectValue placeholder="Select a farmer" />
               </SelectTrigger>
               <SelectContent>
-                {authors?.map((author) => (
-                  <SelectItem key={author.id} value={author.name}>
-                    {author.name}
+                {farmers?.map((farmer) => (
+                  <SelectItem key={farmer.id} value={farmer.id}>
+                    {farmer.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -99,7 +106,7 @@ export default function Home() {
               </SelectTrigger>
               <SelectContent>
                 {tags?.map((tag) => (
-                  <SelectItem key={tag.id} value={tag.name}>
+                  <SelectItem key={tag.id} value={tag.id}>
                     {tag.name}
                   </SelectItem>
                 ))}
@@ -107,20 +114,20 @@ export default function Home() {
             </Select>
           )}
 
-          {isLoadingGenres ? (
+          {isLoadingCategories ? (
             <Skeleton className="h-10 w-full" />
           ) : (
             <Select
-              value={filters.genre}
-              onValueChange={(value) => handleFilterChange("genre", value)}
+              value={filters.category}
+              onValueChange={(value) => handleFilterChange("category", value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a genre" />
+                <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {genres?.map((genre) => (
-                  <SelectItem value={genre.name} key={genre.id}>
-                    {genre.name}
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -137,16 +144,16 @@ export default function Home() {
                   <Skeleton className="h-4 w-1/2" />
                 </div>
               ))
-            : data?.pages.map((page, i) =>
-                page.books.map((book) => (
-                  <BookCard key={book.id} book={book} />
+            : data?.pages.map((page) =>
+                page.products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
                 )),
               )}
         </div>
 
         {isFetching && !isFetchingNextPage && (
           <div className="mt-8 flex justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+            <Loader className="h-8 w-8 animate-spin text-gray-500" />
           </div>
         )}
 
@@ -159,7 +166,7 @@ export default function Home() {
             >
               {isFetchingNextPage ? (
                 <>
-                  <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />{" "}
+                  <Loader className="mr-2 inline h-4 w-4 animate-spin" />{" "}
                   Loading more...
                 </>
               ) : (
@@ -172,16 +179,16 @@ export default function Home() {
           </div>
         )}
 
-        {/* @ts-ignore */}
-        {!hasNextPage && data?.pages[0]?.books.length > 0 && (
-          <div className="mt-8 text-center text-gray-600">
-            You've reached the end of the list.
-          </div>
-        )}
+        {(!hasNextPage && data?.pages[0]?.products.length) ||
+          (0 > 0 && (
+            <div className="mt-8 text-center text-gray-600">
+              You've reached the end of the list.
+            </div>
+          ))}
 
-        {data?.pages[0]?.books.length === 0 && (
+        {data?.pages[0]?.products.length === 0 && (
           <div className="mt-8 text-center text-gray-600">
-            No books found matching your criteria.
+            No products found matching your criteria.
           </div>
         )}
       </main>

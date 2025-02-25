@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import { SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import Cookies from "js-cookie";
-import { Loader2, LogInIcon, ShoppingCart } from "lucide-react";
+import { Loader, LogInIcon, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -34,7 +34,7 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">文庫 (Tosho)</h1>
-          <p className="text-muted-foreground text-sm font-semibold">
+          <p className="text-sm font-semibold text-muted-foreground">
             A random book-store...
           </p>
         </div>
@@ -42,9 +42,9 @@ export function Header() {
           <Link href={"/cart"}>
             <Button variant="outline" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
-              <span className="bg-primary text-primary-foreground absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs">
+              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                 {isLoadingCart ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <Loader className="h-3 w-3 animate-spin" />
                 ) : (
                   cartItemCount
                 )}

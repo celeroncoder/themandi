@@ -3,15 +3,15 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 import { auth } from "@clerk/nextjs/server";
 import { stripe } from "@/server/stripe";
 
-const placeHolderBookCoverImage =
-  "https://edit.org/images/cat/book-covers-big-2019101610.jpg";
+const placeholderProductImage =
+  "https://i0.wp.com/sesitechnologies.com/wp-content/uploads/2021/02/whole-grain.jpeg"; // Update this with your default image
 
 export const cartRouter = createTRPCRouter({
   getCartItems: publicProcedure.query(async ({ ctx }) => {
     const { userId } = await auth();
 
     if (!userId) {
-      throw new Error("You must be logged in to add items to your cart.");
+      throw new Error("You must be logged in to view your cart.");
     }
 
     const dbUser = await ctx.db.user.findUnique({
@@ -27,12 +27,14 @@ export const cartRouter = createTRPCRouter({
       include: {
         items: {
           include: {
-            book: {
+            product: {
               select: {
                 id: true,
                 title: true,
                 price: true,
-                thumbnailUrl: true,
+                imageUrl: true,
+                stock: true,
+                unit: true,
               },
             },
           },
@@ -46,11 +48,13 @@ export const cartRouter = createTRPCRouter({
 
     return cart.items.map((item) => ({
       id: item.id,
-      bookId: item.bookId,
-      title: item.book.title,
-      price: item.book.price,
-      thumbnailUrl: item.book.thumbnailUrl,
-      quantity: 1, // Since the schema doesn't have a quantity field, we'll assume 1 for each item
+      productId: item.productId,
+      title: item.product.title,
+      price: item.product.price,
+      imageUrl: item.product.imageUrl,
+      quantity: item.quantity,
+      unit: item.product.unit,
+      stock: item.product.stock,
     }));
   }),
 
@@ -58,7 +62,7 @@ export const cartRouter = createTRPCRouter({
     const { userId } = await auth();
 
     if (!userId) {
-      throw new Error("You must be logged in to add items to your cart.");
+      throw new Error("You must be logged in to checkout.");
     }
 
     const dbUser = await ctx.db.user.findUnique({
@@ -74,7 +78,7 @@ export const cartRouter = createTRPCRouter({
       include: {
         items: {
           include: {
-            book: true,
+            product: true,
           },
         },
       },
@@ -88,12 +92,13 @@ export const cartRouter = createTRPCRouter({
       price_data: {
         currency: "usd",
         product_data: {
-          name: item.book.title,
-          images: [item.book.thumbnailUrl || placeHolderBookCoverImage],
+          name: item.product.title,
+          // images: [item.product.imageUrl || placeholderProductImage],
+          images: [placeholderProductImage],
         },
-        unit_amount: Math.round(Number(item.book.price) * 100),
+        unit_amount: Math.round(Number(item.product.price) * 100),
       },
-      quantity: 1,
+      quantity: item.quantity,
     }));
 
     const session = await stripe.checkout.sessions.create({
@@ -111,7 +116,12 @@ export const cartRouter = createTRPCRouter({
   }),
 
   addToCart: publicProcedure
-    .input(z.object({ bookId: z.string() }))
+    .input(
+      z.object({
+        productId: z.string(),
+        quantity: z.number().min(1).default(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const { userId } = await auth();
 
@@ -127,8 +137,6 @@ export const cartRouter = createTRPCRouter({
         throw new Error("User not found.");
       }
 
-      console.log(dbUser);
-
       let cart = await ctx.db.cart.findUnique({
         where: { userId: dbUser.id },
       });
@@ -141,25 +149,27 @@ export const cartRouter = createTRPCRouter({
 
       const existingItem = await ctx.db.cartItem.findUnique({
         where: {
-          cartId_bookId: {
+          cartId_productId: {
             cartId: cart.id,
-            bookId: input.bookId,
+            productId: input.productId,
           },
         },
       });
 
       if (existingItem) {
-        // If the item already exists, we don't need to do anything
-        // since we don't have a quantity field in the CartItem model
-        return { success: true };
+        await ctx.db.cartItem.update({
+          where: { id: existingItem.id },
+          data: { quantity: existingItem.quantity + input.quantity },
+        });
+      } else {
+        await ctx.db.cartItem.create({
+          data: {
+            cartId: cart.id,
+            productId: input.productId,
+            quantity: input.quantity,
+          },
+        });
       }
-
-      await ctx.db.cartItem.create({
-        data: {
-          cartId: cart.id,
-          bookId: input.bookId,
-        },
-      });
 
       return { success: true };
     }),
@@ -174,11 +184,27 @@ export const cartRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  updateQuantity: publicProcedure
+    .input(
+      z.object({
+        cartItemId: z.string(),
+        quantity: z.number().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.cartItem.update({
+        where: { id: input.cartItemId },
+        data: { quantity: input.quantity },
+      });
+
+      return { success: true };
+    }),
+
   clearCart: publicProcedure.mutation(async ({ ctx }) => {
     const { userId } = await auth();
 
     if (!userId) {
-      throw new Error("You must be logged in to add items to your cart.");
+      throw new Error("You must be logged in to clear your cart.");
     }
 
     const dbUser = await ctx.db.user.findUnique({
@@ -188,8 +214,6 @@ export const cartRouter = createTRPCRouter({
     if (!dbUser) {
       throw new Error("User not found.");
     }
-
-    console.log(dbUser);
 
     await ctx.db.cartItem.deleteMany({
       where: { cart: { userId: dbUser.id } },
@@ -204,7 +228,7 @@ export const cartRouter = createTRPCRouter({
       const { userId } = await auth();
 
       if (!userId) {
-        throw new Error("You must be logged in to add items to your cart.");
+        throw new Error("You must be logged in to complete purchases.");
       }
 
       const dbUser = await ctx.db.user.findUnique({
@@ -215,17 +239,24 @@ export const cartRouter = createTRPCRouter({
         throw new Error("User not found.");
       }
 
-      console.log(dbUser);
-
       const session = await stripe.checkout.sessions.retrieve(input.sessionId);
 
       if (session.payment_status !== "paid") {
         throw new Error("Payment not completed");
       }
 
+      // Check if a purchase with this session ID already exists
+      const existingPurchases = await ctx.db.purchase.findMany({
+        where: { stripePaymentId: session.payment_intent as string },
+      });
+
+      if (existingPurchases) {
+        return { success: true, purchasesCount: existingPurchases.length };
+      }
+
       const cart = await ctx.db.cart.findUnique({
         where: { userId: dbUser.id },
-        include: { items: { include: { book: true } } },
+        include: { items: { include: { product: true } } },
       });
 
       if (!cart) {
@@ -235,8 +266,9 @@ export const cartRouter = createTRPCRouter({
       const purchases = await ctx.db.purchase.createMany({
         data: cart.items.map((item) => ({
           userId: dbUser.id,
-          bookId: item.bookId,
-          amount: item.book.price,
+          productId: item.productId,
+          amount: item.product.price,
+          quantity: item.quantity,
           status: "COMPLETED",
           stripePaymentId: session.payment_intent as string,
         })),

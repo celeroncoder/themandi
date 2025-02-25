@@ -1,10 +1,11 @@
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
-import { bookRouter } from "./routers/book";
+
+import { productRouter } from "./routers/product";
 import { tagRouter } from "./routers/tag";
-import { genreRouter } from "./routers/genre";
-import { authorRouter } from "./routers/author";
+import { farmerRouter } from "./routers/farmer";
 import { cartRouter } from "./routers/cart";
 import { userRouter } from "./routers/user";
+import { categoryRouter } from "./routers/category";
 
 /**
  * This is the primary router for your server.
@@ -12,10 +13,10 @@ import { userRouter } from "./routers/user";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  book: bookRouter,
+  product: productRouter,
   tag: tagRouter,
-  genre: genreRouter,
-  author: authorRouter,
+  category: categoryRouter,
+  farmer: farmerRouter,
   cart: cartRouter,
   user: userRouter,
 });

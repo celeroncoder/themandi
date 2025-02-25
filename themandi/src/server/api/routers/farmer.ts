@@ -1,9 +1,9 @@
-import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
+import { z } from "zod";
 
-export const tagRouter = createTRPCRouter({
+export const farmerRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.db.tag.findMany({
+    return await ctx.db.farmer.findMany({
       include: {
         products: true,
       },
@@ -14,19 +14,13 @@ export const tagRouter = createTRPCRouter({
     .input(
       z.object({
         name: z.string().min(1),
+        description: z.string(),
+        location: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.tag.create({
+      return await ctx.db.farmer.create({
         data: input,
-      });
-    }),
-
-  delete: publicProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      return await ctx.db.tag.delete({
-        where: { id: input.id },
       });
     }),
 });

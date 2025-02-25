@@ -6,10 +6,11 @@ import { api, RouterOutputs } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader, Trash2 } from "lucide-react";
 import Cookies from "js-cookie";
 import { Header } from "../_component/header";
 import { currencyFormatter } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface CartItem {
   id: string;
@@ -23,6 +24,7 @@ interface CartItem {
 export default function CartPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
   const [cartItems, setCartItems] = useState<
     RouterOutputs["cart"]["getCartItems"]
   >([]);
@@ -31,7 +33,7 @@ export default function CartPage() {
   const { data: userCartItems, isLoading: isCartItemsLoading } =
     api.cart.getCartItems.useQuery();
 
-  const { mutate: createCheckoutSession, isPending: isCheckoutLoading } =
+  const { mutateAsync: createCheckoutSession, isPending: isCheckoutLoading } =
     api.cart.createCheckoutSession.useMutation({
       onSuccess: ({ sessionId }) => {
         router.push(`/api/checkout/${sessionId}`);
@@ -39,7 +41,7 @@ export default function CartPage() {
     });
 
   const trpcCtx = api.useContext();
-  const { mutate: removeFromCart } = api.cart.removeFromCart.useMutation({
+  const { mutateAsync: removeFromCart } = api.cart.removeFromCart.useMutation({
     onSuccess: () => {
       if (user) {
         trpcCtx.cart.getCartItems.invalidate();
@@ -71,17 +73,40 @@ export default function CartPage() {
     0,
   );
 
-  const handleCheckout = () => {
-    if (user) {
-      createCheckoutSession();
-    } else {
-      router.push("/sign-in");
+  const handleCheckout = async () => {
+    try {
+      if (user) {
+        const res = await createCheckoutSession();
+
+        if (!res || !res.sessionId) {
+          toast({
+            title: "Failed to create checkout session",
+            description: "Please try again later.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Redirecting to checkout session...",
+            description: "Please do not refresh the page.",
+            variant: "default",
+          });
+        }
+      } else {
+        router.push("/sign-in");
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "An error occurred",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleRemoveItem = (itemId: string) => {
+  const handleRemoveItem = async (itemId: string) => {
     if (user) {
-      removeFromCart({ cartItemId: itemId });
+      await removeFromCart({ cartItemId: itemId });
     } else {
       const updatedCart = cartItems.filter((item) => item.id !== itemId);
       setCartItems(updatedCart);
@@ -92,7 +117,7 @@ export default function CartPage() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Loader className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -115,7 +140,10 @@ export default function CartPage() {
                 >
                   <div className="flex items-center space-x-4">
                     <Image
-                      src={item.thumbnailUrl || "/images/book-cover.png"}
+                      src={
+                        `/api/image-proxy?url=${encodeURIComponent(item.imageUrl)}` ||
+                        "/images/book-cover.png"
+                      }
                       alt={item.title}
                       width={50}
                       height={75}
@@ -157,7 +185,7 @@ export default function CartPage() {
               disabled={isCheckoutLoading}
             >
               {isCheckoutLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
               {user ? "Proceed to Checkout" : "Sign In to Checkout"}
             </Button>

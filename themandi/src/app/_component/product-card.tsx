@@ -12,16 +12,16 @@ import {
 import { RouterOutputs } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart } from "lucide-react";
+import { Leaf, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/trpc/react";
 import { useUser } from "@clerk/nextjs";
 import Cookies from "js-cookie";
 
-export const BookCard: React.FC<{
-  book: RouterOutputs["book"]["getBooks"]["books"][number];
-}> = ({ book }) => {
+export const ProductCard: React.FC<{
+  product: RouterOutputs["product"]["getProducts"]["products"][number];
+}> = ({ product }) => {
   const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
   const { user } = useUser();
@@ -39,27 +39,27 @@ export const BookCard: React.FC<{
     try {
       if (user) {
         // User is logged in, use tRPC mutation
-        await addToCartMutation.mutateAsync({ bookId: book.id });
+        await addToCartMutation.mutateAsync({ productId: product.id });
       } else {
         // User is not logged in, use cookies
-
         const cart = JSON.parse(Cookies.get("cart") || "[]");
-        const existingItem = cart.find((item: any) => item.id === book.id);
+        const existingItem = cart.find((item: any) => item.id === product.id);
         if (existingItem) {
           existingItem.quantity += 1;
         } else {
-          cart.push({ id: book.id, quantity: 1 });
+          cart.push({ id: product.id, quantity: 1 });
         }
         Cookies.set("cart", JSON.stringify(cart), { expires: 7 }); // Expires in 7 days
       }
       toast({
         title: "Added to cart",
-        description: `${book.title} has been added to your cart.`,
+        description: `${product.title} has been added to your cart.`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add the book to your cart. Please try again.",
+        description:
+          "Failed to add the product to your cart. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -68,12 +68,23 @@ export const BookCard: React.FC<{
   };
 
   return (
-    <Card key={book.id} className="max-h-fit">
+    <Card key={product.id} className="max-h-fit">
       <CardHeader>
-        <CardTitle className="line-clamp-2 capitalize">{book.title}</CardTitle>
+        <CardTitle className="line-clamp-2 flex items-center justify-between capitalize">
+          {product.title}
+          {product.isOrganic && (
+            <Leaf
+              className="h-5 w-5 text-green-500"
+              aria-label="Organic Product"
+            />
+          )}
+        </CardTitle>
         <Image
-          src={book.thumbnailUrl || "/images/book-cover.png"}
-          alt={book.title}
+          src={
+            `/api/image-proxy?url=${encodeURIComponent(product.imageUrl)}` ||
+            "/images/product-placeholder.png"
+          }
+          alt={product.title}
           height={192}
           width={256}
           className="mb-4 h-48 w-full rounded-md object-cover"
@@ -81,36 +92,53 @@ export const BookCard: React.FC<{
       </CardHeader>
       <CardContent>
         <p className="mb-2 text-sm text-gray-600">
-          by {book.authors.map((a) => a.name).join(", ")}
+          by {product.farmers.map((f) => f.name).join(", ")}
         </p>
         <div className="mb-2 text-sm text-gray-500">
-          Genres:{" "}
-          {book.genres.map((genre) => (
-            <Badge variant="outline" key={genre.id} className="mb-1 mr-2">
-              {genre.name}
+          Categories:{" "}
+          {product.categories.map((category) => (
+            <Badge variant="outline" key={category.id} className="mb-1 mr-2">
+              {category.name}
             </Badge>
           ))}
         </div>
         <div className="mb-2 text-sm text-gray-500">
           Tags:{" "}
-          {book.tags.map((tag) => (
+          {product.tags.map((tag) => (
             <Badge variant="secondary" key={tag.id} className="mb-1 mr-2">
               {tag.name}
             </Badge>
           ))}
         </div>
-        <p className="text-lg font-bold">
-          {currencyFormatter.format(Number(book.price))}
-        </p>
+        <div className="space-y-2">
+          <p className="text-lg font-bold">
+            {currencyFormatter.format(Number(product.price))} / {product.unit}
+          </p>
+          <p className="text-sm text-gray-500">
+            Stock: {product.stock} {product.unit}
+          </p>
+          {product.harvestDate && (
+            <p className="text-sm text-gray-500">
+              Harvested: {new Date(product.harvestDate).toLocaleDateString()}
+            </p>
+          )}
+          {product.expiryDate && (
+            <p className="text-sm text-gray-500">
+              Best before: {new Date(product.expiryDate).toLocaleDateString()}
+            </p>
+          )}
+        </div>
       </CardContent>
       <CardFooter>
         <Button
           className="w-full"
           onClick={handleAddToCart}
-          disabled={isAdding}
+          disabled={isAdding || product.stock === 0}
         >
           {isAdding ? (
             "Adding..."
+          ) : product.stock === 0 ? (
+            "Out of Stock"
           ) : (
             <>
               <ShoppingCart className="mr-2 h-4 w-4" />
