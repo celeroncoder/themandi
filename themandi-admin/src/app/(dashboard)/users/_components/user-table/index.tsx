@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Role } from "@prisma/client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   ColumnFiltersState,
   SortingState,
@@ -38,14 +45,19 @@ export function UserTable() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  // const [cursor, setCursor] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [role, setRole] = useState<Role | "ALL">("ALL");
 
-  const { data, isLoading, fetchNextPage } = api.user.getUsers.useInfiniteQuery(
-    { limit: 10 },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
-  );
+  const { data, isLoading, fetchNextPage, hasNextPage } =
+    api.user.getAll.useInfiniteQuery(
+      {
+        limit: 10,
+        role: role === "ALL" ? undefined : role,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
 
   const users = data?.pages.flatMap((page) => page.users) ?? [];
 
@@ -74,7 +86,22 @@ export function UserTable() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex items-center justify-between py-4">
+        <Select
+          value={role}
+          onValueChange={(value) => setRole(value as Role | "ALL")}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Roles</SelectItem>
+            <SelectItem value="USER">User</SelectItem>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+            <SelectItem value="FARMER">Farmer</SelectItem>
+          </SelectContent>
+        </Select>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -176,10 +203,7 @@ export function UserTable() {
                 fetchNextPage();
               }
             }}
-            disabled={
-              !table.getCanNextPage() &&
-              !data?.pages[data.pages.length - 1]?.nextCursor
-            }
+            disabled={!table.getCanNextPage() && !hasNextPage}
           >
             Next
           </Button>

@@ -1,26 +1,24 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { Role } from "@prisma/client";
 
 type User = {
-  idx: number;
   id: string;
   authId: string;
-  role: string;
+  role: Role;
   createdAt: Date;
-  updatedAt: Date;
   totalPurchases: number;
   totalSpent: number;
-  averageRating: number | null;
+  cartItemCount: number;
 };
 
 export const columns: ColumnDef<User>[] = [
   {
-    accessorKey: "idx",
-    header: "Sr. No.",
-  },
-  // TODO: replace with view profile on clerk or user-profile, avatar, name, data from clerk...
-  {
     accessorKey: "authId",
     header: "Auth ID",
+  },
+  {
+    accessorKey: "role",
+    header: "Role",
   },
   {
     accessorKey: "createdAt",
@@ -37,7 +35,7 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "totalSpent",
     header: "Total Spent",
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("totalSpent"));
+      const amount = row.getValue("totalSpent") as number;
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
@@ -46,11 +44,7 @@ export const columns: ColumnDef<User>[] = [
     },
   },
   {
-    accessorKey: "averageRating",
-    header: "Average Rating",
-    cell: ({ row }) => {
-      const rating = row.getValue("averageRating") as number | null;
-      return rating ? rating.toFixed(2) : "N/A";
-    },
+    accessorKey: "cartItemCount",
+    header: "Cart Items",
   },
 ];
