@@ -128,17 +128,16 @@ export function ProductCreateDialog() {
       <DialogTrigger asChild>
         <Button variant="outline">Create New Product</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <ScrollArea className="h-[90vh] pl-2 pr-4">
-          <DialogHeader>
-            <DialogTitle>Create New Product</DialogTitle>
-            <DialogDescription>
-              Enter the details for the new product. Click save when you're
-              done.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <DialogContent className="max-w-screen-sm">
+        <DialogHeader>
+          <DialogTitle>Create New Product</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new product. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="">
+            <ScrollArea className="h-[70vh] gap-y-8 px-4 pl-2">
               <FormField
                 control={form.control}
                 name="title"
@@ -242,7 +241,7 @@ export function ProductCreateDialog() {
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="imageUrl"
                 render={({ field }) => (
@@ -254,7 +253,7 @@ export function ProductCreateDialog() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -489,24 +488,24 @@ export function ProductCreateDialog() {
                   </FormItem>
                 )}
               />
+            </ScrollArea>
 
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  disabled={createProduct.isPending}
-                  className="w-full"
-                >
-                  {createProduct.isPending && (
-                    <Loader2 className="mr-1 animate-spin" size={12} />
-                  )}
-                  {createProduct.isPending
-                    ? "Creating product..."
-                    : "Create Product"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </ScrollArea>
+            <DialogFooter>
+              <Button
+                type="submit"
+                disabled={createProduct.isPending}
+                className="w-full"
+              >
+                {createProduct.isPending && (
+                  <Loader2 className="mr-1 animate-spin" size={12} />
+                )}
+                {createProduct.isPending
+                  ? "Creating product..."
+                  : "Create Product"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

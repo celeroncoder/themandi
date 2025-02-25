@@ -42,6 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProductCreateDialog } from "../product-create-dialog";
+import { isIP } from "net";
 
 export const ProductTable: React.FC = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -66,6 +67,9 @@ export const ProductTable: React.FC = () => {
 
   const products = data?.pages.flatMap((page) => page.products) ?? [];
 
+  const { data: categories, isLoading: isCategoriesLoading } =
+    api.category.getAll.useQuery();
+
   const table = useReactTable({
     data: products,
     columns,
@@ -85,7 +89,7 @@ export const ProductTable: React.FC = () => {
     },
   });
 
-  if (isLoading) {
+  if (isLoading || isCategoriesLoading) {
     return <TableSkeleton />;
   }
 
@@ -126,8 +130,12 @@ export const ProductTable: React.FC = () => {
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            {/* <SelectItem value="">All Categories</SelectItem> */}
-            {/* Add your categories here */}
+            <SelectItem value=" ">All Categories</SelectItem>
+            {categories?.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
