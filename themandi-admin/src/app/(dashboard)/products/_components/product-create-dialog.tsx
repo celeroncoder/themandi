@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, X } from "lucide-react";
+import { CalendarIcon, Loader, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -497,7 +497,7 @@ export function ProductCreateDialog() {
                 className="w-full"
               >
                 {createProduct.isPending && (
-                  <Loader2 className="mr-1 animate-spin" size={12} />
+                  <Loader className="mr-1 animate-spin" size={12} />
                 )}
                 {createProduct.isPending
                   ? "Creating product..."
