@@ -131,7 +131,7 @@ export const ProductCard: React.FC<{
       </CardContent>
       <CardFooter>
         <Button
-          className="w-full"
+          className="w-full bg-[#8b6938] hover:bg-[#c59e58]"
           onClick={handleAddToCart}
           disabled={isAdding || product.stock === 0}
         >

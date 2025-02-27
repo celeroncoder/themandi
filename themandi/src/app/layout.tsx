@@ -10,9 +10,9 @@ import { HydrateClient } from "@/trpc/server";
 import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
-  title: "Tosho",
-  description: "A random book-store",
-  icons: [{ rel: "icon", url: "/favicon.png" }],
+  title: "theमंडी",
+  description: "The free marketplace for Indian farmers",
+  icons: [{ rel: "icon", url: "/images/favicon.ico" }],
 };
 
 export default function RootLayout({

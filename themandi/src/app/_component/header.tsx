@@ -5,6 +5,7 @@ import { api } from "@/trpc/react";
 import { SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import Cookies from "js-cookie";
 import { Loader, LogInIcon, ShoppingCart } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
@@ -32,17 +33,25 @@ export function Header() {
   return (
     <header className="sticky top-0 z-10 bg-white shadow-md transition-shadow duration-300 ease-in-out">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">文庫 (Tosho)</h1>
-          <p className="text-sm font-semibold text-muted-foreground">
-            A random book-store...
-          </p>
-        </div>
+        <Link href={"/"} className="flex items-center justify-center gap-2">
+          <Image
+            src="/images/Mandi_logo.png"
+            height={75}
+            width={75}
+            alt="logo"
+          />
+          <div>
+            <p className="text-bold text-xl">theमंडी</p>
+            <p className="text-base text-muted-foreground">
+              The free marketplace for Indian farmers
+            </p>
+          </div>
+        </Link>
         <div className="flex items-center justify-between gap-4">
           <Link href={"/cart"}>
             <Button variant="outline" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#8b6938] text-xs text-primary-foreground">
                 {isLoadingCart ? (
                   <Loader className="h-3 w-3 animate-spin" />
                 ) : (
