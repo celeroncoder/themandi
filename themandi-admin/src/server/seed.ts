@@ -6,6 +6,204 @@ const prisma = new PrismaClient();
 // Configure faker to use Indian locale
 const fakerIN = new Faker({ locale: [en_IN] });
 
+// Define specific image URLs for each product category
+const productImages = {
+  Vegetables: {
+    "Bhindi (Okra)":
+      "https://images.unsplash.com/photo-1603566541830-a1e7e71a2743",
+    "Baingan (Eggplant)":
+      "https://images.unsplash.com/photo-1597156298117-251f63e2a04a",
+    "Aloo (Potato)":
+      "https://images.unsplash.com/photo-1518977676601-b53f82aba655",
+    "Pyaaz (Onion)":
+      "https://images.unsplash.com/photo-1620574387735-3921be347658",
+    "Tamatar (Tomato)":
+      "https://images.unsplash.com/photo-1582284540020-8acbe03f4924",
+    "Gobhi (Cauliflower)":
+      "https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3",
+    "Matar (Peas)":
+      "https://images.unsplash.com/photo-1587735243615-c03f25aaff15",
+    "Gajar (Carrot)":
+      "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37",
+    "Palak (Spinach)":
+      "https://images.unsplash.com/photo-1576045057995-568f588f82fb",
+    "Kaddu (Pumpkin)":
+      "https://images.unsplash.com/photo-1506917728037-b6af01a7d403",
+    "Turai (Ridge Gourd)":
+      "https://images.unsplash.com/photo-1622205313162-be1d5712a43b",
+    "Lauki (Bottle Gourd)":
+      "https://images.unsplash.com/photo-1596241913242-b28213e88909",
+    "Shimla Mirch (Capsicum)":
+      "https://images.unsplash.com/photo-1586861256632-5b9a9776438e",
+    "Karela (Bitter Gourd)":
+      "https://images.unsplash.com/photo-1631203928493-a2d36c1ddc38",
+    "Mooli (Radish)":
+      "https://images.unsplash.com/photo-1650130597614-32807899edfe",
+  },
+  Fruits: {
+    "Aam (Mango)":
+      "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716",
+    "Kela (Banana)":
+      "https://images.unsplash.com/photo-1603833665858-e61d17a86224",
+    "Seb (Apple)":
+      "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2",
+    "Anaar (Pomegranate)":
+      "https://images.unsplash.com/photo-1603664454146-50b9bb1e7afa",
+    "Papita (Papaya)":
+      "https://images.unsplash.com/photo-1517282009859-f000ec3b26fe",
+    Jamun: "https://images.unsplash.com/photo-1628781321874-2c563ebaf2a4",
+    "Amrood (Guava)":
+      "https://images.unsplash.com/photo-1536511132770-e5058c7e8c46",
+    "Narangi (Orange)":
+      "https://images.unsplash.com/photo-1547514701-42782101795e",
+    "Chikoo (Sapodilla)":
+      "https://images.unsplash.com/photo-1620012074797-ab6a0344476f",
+    Lychee: "https://images.unsplash.com/photo-1626143508000-4b252afa0e18",
+    "Nashpati (Pear)":
+      "https://images.unsplash.com/photo-1615484477778-ca3b77940c25",
+    "Tarbooz (Watermelon)":
+      "https://images.unsplash.com/photo-1587049332298-1c42e83937a7",
+    "Kharbuja (Muskmelon)":
+      "https://images.unsplash.com/photo-1571575173700-afb9492e6a50",
+    "Sitafal (Custard Apple)":
+      "https://images.unsplash.com/photo-1618901185975-d59f7091bcfe",
+    "Angoor (Grapes)":
+      "https://images.unsplash.com/photo-1596363505729-4190a9506133",
+  },
+  Grains: {
+    "Chawal (Rice)":
+      "https://images.unsplash.com/photo-1586201375761-83865001e8ac",
+    "Gehun (Wheat)":
+      "https://images.unsplash.com/photo-1574323347407-f5e1c5a1ec21",
+    "Bajra (Pearl Millet)":
+      "https://images.unsplash.com/photo-1622866306635-7f4eef78dffc",
+    "Jowar (Sorghum)":
+      "https://images.unsplash.com/photo-1584473457493-27a6f9db996e",
+    "Makka (Corn)": "https://images.unsplash.com/photo-1551754655-cd27e38d2076",
+    "Ragi (Finger Millet)":
+      "https://images.unsplash.com/photo-1615485290382-441e4d049cb5",
+    "Chana (Chickpeas)":
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a",
+    "Moong Dal (Green Gram)":
+      "https://images.unsplash.com/photo-1580317092099-ade9937dee4f",
+    "Masoor Dal (Red Lentils)":
+      "https://images.unsplash.com/photo-1597592443777-e0ee4097f4a0",
+    "Toor Dal (Pigeon Peas)":
+      "https://images.unsplash.com/photo-1612257999756-61d09b96ec08",
+    "Urad Dal (Black Gram)":
+      "https://images.unsplash.com/photo-1648968599528-0c56ce5e3549",
+    "Rajma (Kidney Beans)":
+      "https://images.unsplash.com/photo-1590872345695-0bceef898d4f",
+    "Jau (Barley)":
+      "https://images.unsplash.com/photo-1589927986089-35812388d1f4",
+    "Soya Bean": "https://images.unsplash.com/photo-1612491988854-638b927f2cbb",
+    "Kulthi (Horse Gram)":
+      "https://images.unsplash.com/photo-1580389642473-acf29cb44e56",
+  },
+  Spices: {
+    "Haldi (Turmeric)":
+      "https://images.unsplash.com/photo-1615485290398-ee9c1099c8c0",
+    "Mirch (Chili)":
+      "https://images.unsplash.com/photo-1588252303782-cb80119abd6d",
+    "Jeera (Cumin)":
+      "https://images.unsplash.com/photo-1590301157890-4810ed352733",
+    "Dhania (Coriander)":
+      "https://images.unsplash.com/photo-1599909855085-21970dd1d0c7",
+    "Ilaychi (Cardamom)":
+      "https://images.unsplash.com/photo-1638235887202-2470fcff53f1",
+    "Lavang (Clove)":
+      "https://images.unsplash.com/photo-1611119220545-a060a699ce30",
+    "Dalchini (Cinnamon)":
+      "https://images.unsplash.com/photo-1607198179219-10d3d1c09bca",
+    "Kali Mirch (Black Pepper)":
+      "https://images.unsplash.com/photo-1599910092660-44b9abad70c8",
+    "Ajwain (Carom Seeds)":
+      "https://images.unsplash.com/photo-1602406668377-1e5c4555a775",
+    "Saunf (Fennel)":
+      "https://images.unsplash.com/photo-1599086291261-9232b7cf4fff",
+    "Methi (Fenugreek)":
+      "https://images.unsplash.com/photo-1637966483713-2ef5a3a61d87",
+    "Hing (Asafoetida)":
+      "https://images.unsplash.com/photo-1638694427495-636bf232623a",
+    "Kesar (Saffron)":
+      "https://images.unsplash.com/photo-1591189824176-2a27889ba1c6",
+    "Jaiphal (Nutmeg)":
+      "https://images.unsplash.com/photo-1629325421417-09c0b0c7ba81",
+    "Tej Patta (Bay Leaf)":
+      "https://images.unsplash.com/photo-1596889157941-d2651f0a90ff",
+  },
+  Dairy: {
+    "Desi Ghee": "https://images.unsplash.com/photo-1631778068246-da3e4f7a4e29",
+    "Dahi (Yogurt)":
+      "https://images.unsplash.com/photo-1571212515416-fef01fc43637",
+    Paneer: "https://images.unsplash.com/photo-1605281317010-fe5ffe798166",
+    "Makhan (Butter)":
+      "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d",
+    "Chaas (Buttermilk)":
+      "https://images.unsplash.com/photo-1608639515581-e71b11049876",
+    Lassi: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f",
+    Khoya: "https://images.unsplash.com/photo-1552375302-8a8e3702e5c5",
+    Shrikhand: "https://images.unsplash.com/photo-1591462391944-3e72e528ce7d",
+    Mawa: "https://images.unsplash.com/photo-1605300045759-0664df7a9ec1",
+    Cheese: "https://images.unsplash.com/photo-1552767059-ce182ead6c1b",
+    "Malai (Cream)":
+      "https://images.unsplash.com/photo-1608472870995-0221dbf15275",
+    Chhachh: "https://images.unsplash.com/photo-1563355592-7e4f02d75226",
+    "Mishti Doi":
+      "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e",
+    Kheer: "https://images.unsplash.com/photo-1642320009030-ff80041e25ed",
+    Basundi: "https://images.unsplash.com/photo-1625301840055-7b17c524defe",
+  },
+  Organic: {
+    "Organic Brown Rice":
+      "https://images.unsplash.com/photo-1586201375761-83865001e8ac",
+    "Organic Jaggery":
+      "https://images.unsplash.com/photo-1608979040467-6195d5d10790",
+    "Organic Honey":
+      "https://images.unsplash.com/photo-1587049352851-8d4e89133924",
+    "Organic Coconut Oil":
+      "https://images.unsplash.com/photo-1598380202449-b606a95ad78b",
+    "Organic Ghee":
+      "https://images.unsplash.com/photo-1631778068246-da3e4f7a4e29",
+    "Organic Palm Sugar":
+      "https://images.unsplash.com/photo-1604079628298-84182257f95b",
+    "Organic Millets":
+      "https://images.unsplash.com/photo-1623227166281-e5a74d1860cf",
+    "Organic Flours":
+      "https://images.unsplash.com/photo-1603356033288-acfcb54801e6",
+    "Organic Tea": "https://images.unsplash.com/photo-1546445317-29f4545e9d53",
+    "Organic Coffee":
+      "https://images.unsplash.com/photo-1621155586353-5d20417dc829",
+    "Organic Spice Mixes":
+      "https://images.unsplash.com/photo-1596397249129-c7726d5dc7f1",
+    "Organic Dry Fruits":
+      "https://images.unsplash.com/photo-1566478989037-eec170784d0b",
+    "Organic Seeds":
+      "https://images.unsplash.com/photo-1615485290382-441e4d049cb5",
+    "Organic Nuts":
+      "https://images.unsplash.com/photo-1606923829579-0cb981a83e2e",
+    "Organic Pulses":
+      "https://images.unsplash.com/photo-1610725664285-7c57e6eeac3f",
+  },
+};
+
+// Create a fallback image function in case a specific product image is missing
+const getFallbackImage = (category: string) => {
+  const fallbackImages = {
+    Vegetables: "https://images.unsplash.com/photo-1557844352-761f2023520d",
+    Fruits: "https://images.unsplash.com/photo-1610832958506-aa56368176cf",
+    Grains: "https://images.unsplash.com/photo-1574323347126-631450e72736",
+    Spices: "https://images.unsplash.com/photo-1532336414038-cf19250c5757",
+    Dairy: "https://images.unsplash.com/photo-1628689469738-3535f5951a14",
+    Organic: "https://images.unsplash.com/photo-1542838132-92c53300491e",
+  };
+
+  return (
+    fallbackImages[category as keyof typeof fallbackImages] ||
+    "https://images.unsplash.com/photo-1542838132-92c53300491e"
+  ); // Default organic image as final fallback
+};
+
 async function main() {
   console.log("🌱 Starting database seeding...");
 
@@ -26,6 +224,9 @@ async function main() {
 
     console.log("  - Deleting farmers...");
     await prisma.farmer.deleteMany();
+
+    console.log("  - Deleting carts...");
+    await prisma.cart.deleteMany();
 
     console.log("  - Deleting users...");
     await prisma.user.deleteMany();
@@ -337,6 +538,13 @@ async function main() {
         "packets",
       ]);
 
+      // Get relevant image URL for the product
+      const categoryImages =
+        productImages[category.name as keyof typeof productImages] || {};
+      const imageUrl =
+        categoryImages[productName as keyof typeof categoryImages] ||
+        getFallbackImage(category.name);
+
       const productData = {
         title: productName,
         description: `Premium quality ${productName.toLowerCase()} from ${farmer.location}. ${faker.lorem.sentence()}`,
@@ -352,7 +560,7 @@ async function main() {
         tags: {
           connect: productTags.map((tag) => ({ id: tag.id })),
         },
-        imageUrl: faker.image.urlLoremFlickr({ category: "food" }),
+        imageUrl: imageUrl,
       };
 
       // Store metadata separately for logging
@@ -360,6 +568,7 @@ async function main() {
         productCount,
         farmerName: farmer.name,
         tagNames: productTags.map((t) => t.name).join(", "),
+        imageUrl: imageUrl,
       });
 
       productCreationTasks.push(productData);
@@ -396,6 +605,7 @@ async function main() {
           console.log(
             `      - Price: ₹${productData.price} per ${productData.unit}, Stock: ${productData.stock}`,
           );
+          console.log(`      - Image URL: ${meta.imageUrl}`);
 
           const product = await prisma.product.create({ data: productData });
 
