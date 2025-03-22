@@ -6,7 +6,7 @@ import { api, RouterOutputs } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import { Image } from "@/components/image-loader";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Loader, Trash2 } from "lucide-react";
+import { ChevronRight, Loader, Minus, Plus, Trash2 } from "lucide-react";
 import Cookies from "js-cookie";
 import { Header } from "../_component/header";
 import { currencyFormatter } from "@/lib/utils";
@@ -27,7 +27,7 @@ export default function CartPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-  const trpcCtx = api.useContext();
+  const trpcCtx = api.useUtils();
   const [cartItems, setCartItems] = useState<
     RouterOutputs["cart"]["getCartItems"]
   >([]);
@@ -54,6 +54,15 @@ export default function CartPage() {
       }
     },
   });
+
+  const { mutateAsync: updateQuantity, isPending: isUpdatingQuantity } =
+    api.cart.updateQuantity.useMutation({
+      onSuccess: () => {
+        if (user) {
+          trpcCtx.cart.getCartItems.invalidate();
+        }
+      },
+    });
 
   // Calculate total price
   const totalPrice = cartItems.reduce(
@@ -120,6 +129,20 @@ export default function CartPage() {
     }
   };
 
+  const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) return; // Don't allow quantity less than 1
+
+    if (user) {
+      await updateQuantity({ cartItemId: itemId, quantity: newQuantity });
+    } else {
+      const updatedCart = cartItems.map((item) =>
+        item.id === itemId ? { ...item, quantity: newQuantity } : item,
+      );
+      setCartItems(updatedCart);
+      Cookies.set("cart", JSON.stringify(updatedCart));
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -172,9 +195,33 @@ export default function CartPage() {
                         <h2 className="font-medium text-gray-800">
                           {item.title}
                         </h2>
-                        <p className="mt-1 text-sm text-gray-500">
-                          Quantity: {item.quantity}
-                        </p>
+                        <div className="mt-2 flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() =>
+                              handleUpdateQuantity(item.id, item.quantity - 1)
+                            }
+                            disabled={item.quantity <= 1 || isUpdatingQuantity}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="min-w-8 text-center">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() =>
+                              handleUpdateQuantity(item.id, item.quantity + 1)
+                            }
+                            disabled={isUpdatingQuantity}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
