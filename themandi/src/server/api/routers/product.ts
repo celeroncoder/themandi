@@ -8,16 +8,30 @@ export const productRouter = createTRPCRouter({
       z.object({
         limit: z.number().min(1).max(100).nullish(),
         cursor: z.string().nullish(),
+        title: z.string().optional(),
+        farmerId: z.string().optional(),
+        tagId: z.string().optional(),
+        categoryId: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const limit = input.limit ?? 50;
-      const { cursor } = input;
+      const { cursor, title, farmerId, tagId, categoryId } = input;
+
+      const where = {
+        ...(title
+          ? { title: { contains: title, mode: "insensitive" as const } }
+          : {}),
+        ...(farmerId ? { farmers: { some: { id: farmerId } } } : {}),
+        ...(tagId ? { tags: { some: { id: tagId } } } : {}),
+        ...(categoryId ? { categories: { some: { id: categoryId } } } : {}),
+      };
 
       const products = await ctx.db.product.findMany({
         take: limit + 1,
         cursor: cursor ? { id: cursor } : undefined,
         orderBy: { createdAt: "desc" },
+        where,
         include: {
           farmers: true,
           categories: true,

@@ -1,13 +1,12 @@
 "use client";
 
 import { currencyFormatter } from "@/lib/utils";
-import Image from "next/image";
+import { Image } from "@/components/image-loader";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { RouterOutputs } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
@@ -18,11 +17,13 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/trpc/react";
 import { useUser } from "@clerk/nextjs";
 import Cookies from "js-cookie";
+import { motion } from "framer-motion";
 
 export const ProductCard: React.FC<{
   product: RouterOutputs["product"]["getProducts"]["products"][number];
 }> = ({ product }) => {
   const [isAdding, setIsAdding] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const { toast } = useToast();
   const { user } = useUser();
 
@@ -68,85 +69,152 @@ export const ProductCard: React.FC<{
   };
 
   return (
-    <Card key={product.id} className="max-h-fit">
-      <CardHeader>
-        <CardTitle className="line-clamp-2 flex items-center justify-between capitalize">
-          {product.title}
-          {product.isOrganic && (
-            <Leaf
-              className="h-5 w-5 text-green-500"
-              aria-label="Organic Product"
-            />
-          )}
-        </CardTitle>
-        <Image
-          src={
-            `/api/image-proxy?url=${encodeURIComponent(product.imageUrl)}` ||
-            "/images/product-placeholder.png"
-          }
-          alt={product.title}
-          height={192}
-          width={256}
-          className="mb-4 h-48 w-full rounded-md object-cover"
-        />
-      </CardHeader>
-      <CardContent>
-        <p className="mb-2 text-sm text-gray-600">
-          by {product.farmers.map((f) => f.name).join(", ")}
-        </p>
-        <div className="mb-2 text-sm text-gray-500">
-          Categories:{" "}
-          {product.categories.map((category) => (
-            <Badge variant="outline" key={category.id} className="mb-1 mr-2">
-              {category.name}
-            </Badge>
-          ))}
-        </div>
-        <div className="mb-2 text-sm text-gray-500">
-          Tags:{" "}
-          {product.tags.map((tag) => (
-            <Badge variant="secondary" key={tag.id} className="mb-1 mr-2">
-              {tag.name}
-            </Badge>
-          ))}
-        </div>
-        <div className="space-y-2">
-          <p className="text-lg font-bold">
-            {currencyFormatter.format(Number(product.price))} / {product.unit}
-          </p>
-          <p className="text-sm text-gray-500">
-            Stock: {product.stock} {product.unit}
-          </p>
-          {product.harvestDate && (
-            <p className="text-sm text-gray-500">
-              Harvested: {new Date(product.harvestDate).toLocaleDateString()}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ scale: 1.02 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="h-full"
+    >
+      <Card
+        key={product.id}
+        className="flex h-full flex-col overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl"
+      >
+        <CardHeader className="flex-shrink-0 p-0">
+          <div className="relative">
+            <motion.div
+              animate={{ scale: isHovered ? 1.05 : 1 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <Image
+                src={
+                  `/api/image-proxy?url=${encodeURIComponent(product.imageUrl)}` ||
+                  "/images/product-placeholder.png"
+                }
+                alt={product.title}
+                height={192}
+                width={256}
+                containerClassName="h-48"
+                className="h-48 w-full object-cover transition-transform duration-300"
+              />
+            </motion.div>
+            {product.isOrganic && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="absolute right-2 top-2 rounded-full bg-white p-1.5 shadow-md"
+              >
+                <Leaf
+                  className="h-5 w-5 text-green-500"
+                  aria-label="Organic Product"
+                />
+              </motion.div>
+            )}
+          </div>
+          <div className="px-4 pt-4">
+            <h3 className="line-clamp-2 h-12 text-lg font-bold capitalize text-[#4a3520]">
+              {product.title}
+            </h3>
+            <p className="mt-1 text-sm font-medium text-[#8b6938]">
+              by {product.farmers.map((f) => f.name).join(", ")}
             </p>
-          )}
-          {product.expiryDate && (
-            <p className="text-sm text-gray-500">
-              Best before: {new Date(product.expiryDate).toLocaleDateString()}
+          </div>
+        </CardHeader>
+        <CardContent className="flex-grow px-4 py-2">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="mb-2 flex flex-wrap gap-1 text-sm text-gray-500"
+          >
+            {product.categories.map((category) => (
+              <Badge
+                variant="outline"
+                key={category.id}
+                className="bg-[#f7f3eb] text-[#8b6938] hover:bg-[#e9dfc7]"
+              >
+                {category.name}
+              </Badge>
+            ))}
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mb-3 flex flex-wrap gap-1 text-sm text-gray-500"
+          >
+            {product.tags.map((tag) => (
+              <Badge
+                variant="secondary"
+                key={tag.id}
+                className="bg-[#e9dfc7] text-[#594324]"
+              >
+                {tag.name}
+              </Badge>
+            ))}
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="space-y-1"
+          >
+            <p className="text-xl font-bold text-[#4a3520]">
+              {currencyFormatter.format(Number(product.price))} / {product.unit}
             </p>
-          )}
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button
-          className="w-full bg-[#8b6938] hover:bg-[#c59e58]"
-          onClick={handleAddToCart}
-          disabled={isAdding || product.stock === 0}
-        >
-          {isAdding ? (
-            "Adding..."
-          ) : product.stock === 0 ? (
-            "Out of Stock"
-          ) : (
-            <>
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              <span>Add to Cart</span>
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Stock:</span> {product.stock}{" "}
+              {product.unit}
+            </p>
+            {product.harvestDate && (
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Harvested:</span>{" "}
+                {new Date(product.harvestDate).toLocaleDateString()}
+              </p>
+            )}
+            {product.expiryDate && (
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Best before:</span>{" "}
+                {new Date(product.expiryDate).toLocaleDateString()}
+              </p>
+            )}
+          </motion.div>
+        </CardContent>
+        <CardFooter className="flex-shrink-0 px-4 pb-4 pt-2">
+          <motion.div className="w-full" whileTap={{ scale: 0.95 }}>
+            <Button
+              className="w-full bg-[#8b6938] font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#c59e58]"
+              onClick={handleAddToCart}
+              disabled={isAdding || product.stock === 0}
+            >
+              {isAdding ? (
+                <span className="flex items-center">
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1,
+                      ease: "linear",
+                    }}
+                    className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent"
+                  />
+                  Adding...
+                </span>
+              ) : product.stock === 0 ? (
+                "Out of Stock"
+              ) : (
+                <span className="flex items-center">
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  <span>Add to Cart</span>
+                </span>
+              )}
+            </Button>
+          </motion.div>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 };

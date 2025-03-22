@@ -53,7 +53,7 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  create: publicProcedure
+  upsertUser: publicProcedure
     .input(
       z.object({
         authId: z.string(),
@@ -61,8 +61,10 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.user.create({
-        data: input,
+      return await ctx.db.user.upsert({
+        where: { authId: input.authId },
+        update: { role: input.role },
+        create: input,
       });
     }),
 

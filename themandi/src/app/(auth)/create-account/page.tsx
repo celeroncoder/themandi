@@ -11,7 +11,7 @@ export default async function CreateAccountPage() {
     return redirect("/sign-in");
   }
 
-  const data = await api.user.create({ authId: userId, role: "USER" });
+  const data = await api.user.upsertUser({ authId: userId, role: "USER" });
 
   if (data.id) return redirect("/");
   else return redirect("/sign-in");
