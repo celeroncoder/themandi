@@ -250,7 +250,7 @@ export const cartRouter = createTRPCRouter({
         where: { stripePaymentId: session.payment_intent as string },
       });
 
-      if (existingPurchases) {
+      if (existingPurchases && existingPurchases.length > 0) {
         return { success: true, purchasesCount: existingPurchases.length };
       }
 

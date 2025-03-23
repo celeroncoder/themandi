@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import { SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import Cookies from "js-cookie";
-import { Loader, LogInIcon, ShoppingCart } from "lucide-react";
+import { Loader, LogInIcon, ShoppingBag, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -58,6 +58,12 @@ export function Header() {
                   cartItemCount
                 )}
               </span>
+            </Button>
+          </Link>
+
+          <Link href={"/purchases"}>
+            <Button variant="outline" size="icon">
+              <ShoppingBag className="h-5 w-5" />
             </Button>
           </Link>
 

@@ -44,6 +44,74 @@ export const purchaseRouter = createTRPCRouter({
       };
     }),
 
+  getByUser: publicProcedure
+    .input(
+      z
+        .object({
+          userId: z.string().optional(),
+          authId: z.string().optional(),
+          limit: z.number().min(1).max(100).nullish(),
+          cursor: z.string().nullish(),
+          status: z
+            .enum(["PENDING", "COMPLETED", "FAILED", "SHIPPED", "DELIVERED"])
+            .optional(),
+        })
+        .refine((data) => data.userId || data.authId, {
+          message: "Either userId or authId must be provided",
+        }),
+    )
+    .query(async ({ ctx, input }) => {
+      const limit = input.limit ?? 50;
+      const { cursor, status, userId, authId } = input;
+
+      const userWhere = userId
+        ? { id: userId }
+        : authId
+          ? { authId }
+          : undefined;
+
+      if (!userWhere) {
+        throw new Error("Either userId or authId must be provided");
+      }
+
+      // First get the user
+      const user = await ctx.db.user.findFirst({
+        where: userWhere,
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const purchases = await ctx.db.purchase.findMany({
+        take: limit + 1,
+        cursor: cursor ? { id: cursor } : undefined,
+        where: {
+          userId: user.id,
+          ...(status ? { status } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+        include: {
+          product: {
+            include: {
+              farmers: true,
+            },
+          },
+        },
+      });
+
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (purchases.length > limit) {
+        const nextItem = purchases.pop();
+        nextCursor = nextItem!.id;
+      }
+
+      return {
+        purchases,
+        nextCursor,
+      };
+    }),
+
   create: publicProcedure
     .input(
       z.object({
