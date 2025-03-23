@@ -11,6 +11,7 @@ import Cookies from "js-cookie";
 import { Header } from "../_component/header";
 import { currencyFormatter } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Interface for cart item structure
 interface CartItem {
@@ -70,7 +71,6 @@ export default function CartPage() {
     0,
   );
 
-  // Load cart items on component mount
   useEffect(() => {
     if (isLoaded) {
       if (user) {
@@ -79,7 +79,6 @@ export default function CartPage() {
           setIsLoading(false);
         }
       } else {
-        // Fetch cart items from cookies for non-logged-in users
         const cookieCart = JSON.parse(Cookies.get("cart") || "[]");
         setCartItems(cookieCart);
         setIsLoading(false);
@@ -130,7 +129,7 @@ export default function CartPage() {
   };
 
   const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
-    if (newQuantity < 1) return; // Don't allow quantity less than 1
+    if (newQuantity < 1) return;
 
     if (user) {
       await updateQuantity({ cartItemId: itemId, quantity: newQuantity });
@@ -143,153 +142,185 @@ export default function CartPage() {
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader className="h-8 w-8 animate-spin" />
+      <div className="flex h-screen items-center justify-center bg-[#f8f5f0]">
+        <Loader className="h-8 w-8 animate-spin text-[#8b6938]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f8f5f0]">
       <Header />
 
       <main className="container mx-auto max-w-4xl px-4 py-12">
-        <h1 className="mb-10 text-center text-3xl font-bold text-gray-800">
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10 text-center text-3xl font-bold text-[#2c1810]"
+        >
           Your Shopping Cart
-        </h1>
+        </motion.h1>
 
-        {cartItems.length === 0 ? (
-          <div className="rounded-lg bg-white p-8 text-center shadow-sm">
-            <p className="text-gray-600">Your cart is empty.</p>
-            <Button className="mt-4" onClick={() => router.push("/")}>
-              Continue Shopping
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Cart Items */}
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <div className="mb-6 space-y-6">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-md border border-gray-100 p-4 hover:bg-gray-50"
-                  >
-                    <div className="flex items-center space-x-6">
-                      <div className="h-20 w-16 overflow-hidden rounded-md border border-gray-200">
-                        <Image
-                          src={
-                            `/api/image-proxy?url=${encodeURIComponent(item.imageUrl)}` ||
-                            "/images/book-cover.png"
-                          }
-                          alt={item.title}
-                          width={64}
-                          height={80}
-                          containerClassName="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h2 className="font-medium text-gray-800">
-                          {item.title}
-                        </h2>
-                        <div className="mt-2 flex items-center space-x-2">
+        <AnimatePresence>
+          {cartItems.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="rounded-lg bg-white p-8 text-center shadow-lg"
+            >
+              <p className="text-[#2c1810]">Your cart is empty.</p>
+              <Button
+                className="mt-4 bg-[#8b6938] transition-colors duration-300 hover:bg-[#c59e58]"
+                onClick={() => router.push("/")}
+              >
+                Continue Shopping
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-8"
+            >
+              <div className="rounded-lg bg-white p-6 shadow-lg">
+                <div className="mb-6 space-y-6">
+                  <AnimatePresence>
+                    {cartItems.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="flex items-center justify-between rounded-md border border-[#e2d5c3] p-4 transition-colors duration-300 hover:bg-[#f8f5f0]"
+                      >
+                        <div className="flex items-center space-x-6">
+                          <div className="h-20 w-16 overflow-hidden rounded-md border border-[#e2d5c3]">
+                            <Image
+                              src={
+                                `/api/image-proxy?url=${encodeURIComponent(item.imageUrl)}` ||
+                                "/images/book-cover.png"
+                              }
+                              alt={item.title}
+                              width={64}
+                              height={80}
+                              containerClassName="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <h2 className="font-medium text-[#2c1810]">
+                              {item.title}
+                            </h2>
+                            <div className="mt-2 flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-6 w-6 border-[#8b6938] text-[#8b6938]"
+                                onClick={() =>
+                                  handleUpdateQuantity(
+                                    item.id,
+                                    item.quantity - 1,
+                                  )
+                                }
+                                disabled={
+                                  item.quantity <= 1 || isUpdatingQuantity
+                                }
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="min-w-8 text-center">
+                                {item.quantity}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-6 w-6 border-[#8b6938] text-[#8b6938]"
+                                onClick={() =>
+                                  handleUpdateQuantity(
+                                    item.id,
+                                    item.quantity + 1,
+                                  )
+                                }
+                                disabled={isUpdatingQuantity}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <p className="font-medium text-[#2c1810]">
+                            {currencyFormatter.format(
+                              Number(item.price) * item.quantity,
+                            )}
+                          </p>
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-6 w-6"
-                            onClick={() =>
-                              handleUpdateQuantity(item.id, item.quantity - 1)
-                            }
-                            disabled={item.quantity <= 1 || isUpdatingQuantity}
+                            className="h-8 w-8 text-red-500 transition-colors duration-300 hover:bg-red-50 hover:text-red-600"
+                            onClick={() => handleRemoveItem(item.id)}
                           >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="min-w-8 text-center">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() =>
-                              handleUpdateQuantity(item.id, item.quantity + 1)
-                            }
-                            disabled={isUpdatingQuantity}
-                          >
-                            <Plus className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <p className="font-medium text-gray-900">
-                        {currencyFormatter.format(
-                          Number(item.price) * item.quantity,
-                        )}
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-                        onClick={() => handleRemoveItem(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Order Summary */}
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-medium text-gray-800">
-                Order Summary
-              </h2>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <p className="text-gray-600">Subtotal</p>
-                  <p>{currencyFormatter.format(totalPrice)}</p>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <p className="text-gray-600">Shipping</p>
-                  <p>Calculated at checkout</p>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               </div>
 
-              <div className="mt-4 border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-lg font-medium text-gray-800">Total</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {currencyFormatter.format(totalPrice)}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleCheckout}
-                className="mt-6 w-full bg-[#8b6938] py-6 text-base font-medium hover:bg-[#c59e58]"
-                disabled={isCheckoutLoading}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg bg-white p-6 shadow-lg"
               >
-                {isCheckoutLoading ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    {user ? "Proceed to Checkout" : "Sign In to Checkout"}{" "}
-                    <ChevronRight />
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
+                <h2 className="mb-4 text-lg font-medium text-[#2c1810]">
+                  Order Summary
+                </h2>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <p className="text-[#2c1810]">Subtotal</p>
+                    <p>{currencyFormatter.format(totalPrice)}</p>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <p className="text-[#2c1810]">Shipping</p>
+                    <p>Calculated at checkout</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-[#e2d5c3] pt-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg font-medium text-[#2c1810]">Total</p>
+                    <p className="text-xl font-bold text-[#2c1810]">
+                      {currencyFormatter.format(totalPrice)}
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleCheckout}
+                  className="mt-6 w-full bg-[#8b6938] py-6 text-base font-medium transition-colors duration-300 hover:bg-[#c59e58]"
+                  disabled={isCheckoutLoading}
+                >
+                  {isCheckoutLoading ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {user ? "Proceed to Checkout" : "Sign In to Checkout"}{" "}
+                      <ChevronRight />
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

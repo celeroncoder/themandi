@@ -36,18 +36,19 @@ export function Header() {
         <Link href={"/"} className="flex items-center justify-center gap-2">
           <Image
             src="/images/Mandi_logo.png"
-            height={75}
-            width={75}
+            height={50}
+            width={50}
             alt="logo"
+            className="sm:h-[75px] sm:w-[75px]"
           />
           <div>
-            <p className="text-bold text-xl">theमंडी</p>
-            <p className="text-base text-muted-foreground">
+            <p className="text-bold text-lg sm:text-xl">theमंडी</p>
+            <p className="hidden text-sm text-muted-foreground sm:block sm:text-base">
               The free marketplace for Indian farmers
             </p>
           </div>
         </Link>
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           <Link href={"/cart"}>
             <Button variant="outline" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />

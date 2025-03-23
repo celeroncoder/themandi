@@ -103,7 +103,7 @@ export const Image = ({
           fill={fill}
           className={cn(
             isLoading ? "opacity-0" : "opacity-100",
-            "rounded transition-opacity duration-300",
+            "size-full rounded transition-opacity duration-300",
             className,
           )}
           {...rest}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { stripe } from "@/server/stripe";
 
 const placeholderProductImage =
@@ -59,14 +59,14 @@ export const cartRouter = createTRPCRouter({
   }),
 
   createCheckoutSession: publicProcedure.mutation(async ({ ctx }) => {
-    const { userId } = await auth();
+    const user = await currentUser();
 
-    if (!userId) {
+    if (!user || !user.id) {
       throw new Error("You must be logged in to checkout.");
     }
 
     const dbUser = await ctx.db.user.findUnique({
-      where: { authId: userId },
+      where: { authId: user.id },
     });
 
     if (!dbUser) {
@@ -90,11 +90,11 @@ export const cartRouter = createTRPCRouter({
 
     const lineItems = cart.items.map((item) => ({
       price_data: {
-        currency: "usd",
+        currency: "inr",
         product_data: {
           name: item.product.title,
-          // images: [item.product.imageUrl || placeholderProductImage],
-          images: [placeholderProductImage],
+          images: [item.product.imageUrl || placeholderProductImage],
+          // images: [placeholderProductImage],
         },
         unit_amount: Math.round(Number(item.product.price) * 100),
       },
@@ -110,6 +110,8 @@ export const cartRouter = createTRPCRouter({
       metadata: {
         userId: dbUser.id,
       },
+      customer_email: user.primaryEmailAddress?.emailAddress || undefined,
+      billing_address_collection: "required",
     });
 
     return { sessionId: session.id };
