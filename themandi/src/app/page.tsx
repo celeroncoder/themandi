@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,8 +22,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 // You'll need to create this component separately
 import { ProductCard } from "./_component/product-card";
 
-export default function Home() {
-  const router = useRouter();
+function HomeContent() {
   const searchParams = useSearchParams();
 
   // Initialize filters from URL params
@@ -535,6 +534,7 @@ export default function Home() {
           </div>
         )}
 
+        {/* @ts-ignore */}
         {hasNextPage && data?.pages[0]?.products.length > 0 && (
           <motion.div
             className="mt-8 text-center"
@@ -563,6 +563,7 @@ export default function Home() {
           </motion.div>
         )}
 
+        {/* @ts-ignore */}
         {!hasNextPage && data?.pages[0]?.products.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -584,5 +585,13 @@ export default function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
   );
 }
